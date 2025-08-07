@@ -1,0 +1,74 @@
+Sources
+[1] [PDF] Venture Capital Activity in Africa - AVCA https://www.avca.africa/media/vxooamzv/avca_vca_report_q3_2024.pdf
+[2] 2024 Africa Tech Venture Capital - Partech https://partechpartners.com/africa-reports/2024-africa-tech-venture-capital-report
+[3] The $803M Question - Can Africa Build AI or Just Use It https://blog.startuplist.africa/articles/ai-revolution-in-africa-2025
+[4] The AI Startups Winning African VC Backing in 2025 — and Why https://launchbaseafrica.com/2025/06/24/the-ai-startups-winning-african-vc-backing-in-2025-and-why/
+[5] Venture Capital Investment Trends in Africa: 2024 Recap and 2025 ... https://www.afrilabs.com/venture-capital-investment-trends-in-africa-2024-recap-and-2025-projections/
+[6] AI for persons with disabilities, others given prominence in AI4D ... https://www.myjoyonline.com/ai-for-persons-with-disabilities-others-given-prominence-in-ai4d-africa-phase-2/
+[7] Amplifying the impact of artificial intelligence in global health ... https://idrc-crdi.ca/en/what-we-do/projects-we-support/project/amplifying-impact-artificial-intelligence-global-health
+[8] I-DAIR receives IDRC grant to promote responsible and gender ... https://www.healthai.agency/blog/i-dair-receives-grant-on-responsible-ai
+[9] AI4GH: Innovation hub in the Middle East and North Africa on using ... https://idrc-crdi.ca/en/what-we-do/projects-we-support/project/ai4gh-innovation-hub-middle-east-and-north-africa-using
+[10] Google commits $37 million to AI development in Africa https://economictimes.com/tech/artificial-intelligence/google-commits-37-million-to-ai-development-in-africa/articleshow/122886138.cms
+[11] Google unveils $37m cumulative funding to support Africa’s AI development https://www.vanguardngr.com/2025/07/google-unveils-37m-cumulative-funding-to-support-africas-ai-development/
+[12] Tech Giant Microsoft Pours $298m into South Africa's AI Infrastructure https://launchbaseafrica.com/2025/03/07/tech-giant-microsoft-pours-298m-into-south-africas-ai-infrastructure/
+[13] Microsoft invests ZAR 5.4bn in South Africa https://news.microsoft.com/source/emea/features/microsoft-invests-zar-5-4bn-in-south-africa/
+[14] [PDF] 2023-Partech-Africa-Tech-VC-Report ... - BitKE https://bitcoinke.io/wp-content/uploads/2024/01/2023-Partech-Africa-Tech-VC-Report-BitKE.pdf
+[15] Grants and Awards - Data Science Africa https://datascienceafrica.org/grants
+[16] Africa's 'big four' dominated VC funding in 2024 - Connecting Africa https://www.connectingafrica.com/investment/africa-s-big-four-dominated-vc-funding-in-2024
+[17] AI4D Africa Scholarships 2025 for PhD students in AI and ML. https://www.opportunitiesforafricans.com/artificial-intelligence-for-development-in-africa-ai4d-africa-scholarships-2025/
+[18] African AI Fund: Five questions on how Africa plans to join the race https://www.theafricareport.com/383301/african-ai-fund-five-questions-on-how-africa-plans-to-join-the-race/
+[19] African Observatory on Responsible AI Receives Major Grant to ... https://www.globalcenter.ai/news/african-observatory-on-responsible-ai-receives-major-grant-to-advance-inclusive-ai-futures-in-africa
+[20] Data Science Africa Llama Impact Africa Grant Program https://www.datascienceafrica.org/dsa-Llama-impact-africa-grant/
+[21] Google’s $37M AI investment in Africa targets farms and forgotten languages https://techpoint.africa/news/googles-37m-ai-investment/
+[22] Funding and Investment Opportunities for African AI Startups https://iafrica.com/unlocking-capital-funding-and-investment-opportunities-for-african-ai-startups/
+[23] 2024 Partech Africa Tech VC Report: With US$3.2B Raised, African ... https://partechpartners.com/news/2024-partech-africa-tech-vc-report-with-us32b-raised-african-startups-show-resilience-despite-7-drop-in-funding
+[24] Startup funding concerns balanced by AI optimism at GITEX Africa https://african.business/2025/04/technology-information/startup-funding-concerns-balanced-by-ai-optimism-at-gitex-africa
+[25] The 2024 Partech Africa Report is out! | Clément Puiseux - LinkedIn https://www.linkedin.com/posts/clément-puiseux_partech-africa-report-activity-7288238857647489025-HBzy
+[26] Rethinking private equity for Africa's AI future | World Economic Forum https://www.weforum.org/stories/2025/04/rethinking-private-equity-for-africa-s-ai-driven-future/
+[27] African investors led venture capital fundraising in 2024 - Semafor https://www.semafor.com/article/04/17/2025/african-investors-led-venture-capital-fundraising-in-2024
+[28] Who are Africa's 20 tech champions in 2025? https://www.theafricareport.com/379472/investors-back-fintech-in-our-ranking-of-africas-future-tech-champions/
+[29] 20 Top AI Startups in Africa and Their Funding - Sisi Afrika Magazine https://www.sisiafrika.com/20-top-ai-startups-in-africa-and-their-funding/
+[30] African AI intelligence startup Rwazi raises $12m Series A funding round https://disruptafrica.com/2025/07/18/african-ai-intelligence-startup-rwazi-raises-12m-series-a-funding-round/
+[31] GFSA: AI First (Africa) - Google for Startups Accelerator https://startup.google.com/programs/accelerator/ai-first/africa/
+[32] Our 2024 Africa Tech Venture Capital Report is here! | Partech https://www.linkedin.com/posts/partech_2024-partech-africa-report-activity-7288112282021023745-xh9x
+[33] South African-crewed AI startup gets R151 million from Google — and it’s hiring https://mybroadband.co.za/news/ai/602161-south-african-crewed-ai-startup-gets-r151-million-from-google-and-its-hiring.html
+[34] 2024 Venture Capital in Africa Report - AVCA https://www.avca.africa/data-intelligence/research-publications/2024-venture-capital-in-africa-report/
+[35] Call for Applications: AI4D Innovation Scaling Challenge https://opportunitiesforyouth.org/2025/07/14/ai4d-innovation-scaling-challenge-supporting-responsible-ai-solutions-in-africa/
+[36] 2024 Young African AI Research Fellowship: Empowering Africa's ... https://www.africanresearchers.org/2024-young-african-ai-research-fellowship-empowering-africas-next-ai-leaders-at-instadeep-rwanda/
+[37] [PDF] Fosteringresponsible innovation https://idrc-crdi.ca/sites/default/files/2024-10/AR 2023-24 ENG.pdf
+[38] Artificial Intelligence for Development Africa, responsible AI ... https://idrc-crdi.ca/en/what-we-do/projects-we-support/project/artificial-intelligence-development-africa-responsible-ai
+[39] It's Over 9000! https://www.medbox.org/healthFinancingEntry/6567a435212eaade2e0f1acb
+[40] Apply Now: $25000 for African Artificial Intelligence Applications https://www.ictworks.org/african-artificial-intelligence-applications/
+[41] AI4D Africa & AI4COVID with IDRC - Openaid https://openaid.se/en/contributions/SE-0-SE-6-13388
+[42] AI4D Africa https://ai4d.acts-net.org
+[43] Combatting inequality with safe, responsible AI in the Indo-Pacific ... https://idrc-crdi.ca/en/news/combatting-inequality-safe-responsible-ai-indo-pacific-region
+[44] AI4D-IndabaX Innovation: Call for Proposals - Deep Learning Indaba https://deeplearningindaba.com/2020/ai4d-indabax-innovation-call-for-proposals/
+[45] Annual Report 2023-2024 | IDRC https://idrc-crdi.ca/en/stories/annual-report-2023-2024
+[46] Frequently Asked Questions (FAQs) - AI4D Africa https://ai4d.acts-net.org/faqs/
+[47] Funding - AI4PEP https://ai4pep.org/funding/
+[48] AI4D-FCDO Innovation: Scaling and sustaining AI solutions to ... https://idrc-crdi.ca/en/what-we-do/projects-we-support/project/ai4d-fcdo-innovation-scaling-and-sustaining-ai-solutions
+[49] AI4D Africa https://www.ai4d.ai
+[50] Responsible AI Africa https://www.responsibleai.africa
+[51] Google commits $37 million to AI development in Africa https://www.jamaicaobserver.com/2025/07/24/google-commits-37-million-ai-development-africa/
+[52] Microsoft plunks $300m for hyperscale cloud and AI infrastructure in ... https://africa.hyperscalers.news/news/microsoft-plunks-300m-for-hyperscale-cloud-and-ai-infrastructure-in-south-africa/
+[53] About - AI4D Africa https://www.ai4d.ai/about
+[54] Microsoft invests $300 million to boost AI in South Africa - CoinGeek https://coingeek.com/microsoft-invests-300-million-to-boost-ai-in-south-africa/
+[55] Google Commits $37 Million to Shape Africa’s AI Future https://innovation-village.com/google-commits-37-million-to-shape-africas-ai-future/
+[56] Microsoft to invest $300 million more in South Africa's AI infrastructure https://www.reuters.com/technology/artificial-intelligence/microsoft-invest-additional-54-billion-rand-south-africa-ai-infrastructure-2025-03-06/
+[57] Artificial Intelligence for Development | IDRC https://idrc-crdi.ca/en/initiative/artificial-intelligence-development
+[58] Google Commits $37 Million To AI Development In Africa https://www.barrons.com/articles/google-commits-37-million-to-ai-development-in-africa-aaf0c167
+[59] Horizon Europe funding for artificial intelligence is surging, a ... https://sciencebusiness.net/news/ai/and-winners-are-horizon-europe-funding-artificial-intelligence-surging-sciencebusiness
+[60] Artificial Intelligence for Global Health | IDRC https://idrc-crdi.ca/en/initiative/artificial-intelligence-global-health
+[61] Workshop AI4A – Artificial Intelligence for Africa – Shaping Global ... https://www.unipd-ubep.it/2024/05/28/workshop-ai4a-artificial-intelligence-shaping-global-health-perspectives-from-research-and-medicine-in-africa/
+[62] Canadian government investing $25 million in health research ... https://betakit.com/canadian-government-investing-25-million-in-health-research-projects-that-use-ai/
+[63] Artificial Intelligence in the Development Sector: What's It All About? https://canwach.ca/article/artificial-intelligence-in-the-development-sector/
+[64] New funding boosts AI-driven public health projects in the Global ... https://idrc-crdi.ca/en/news/new-funding-boosts-ai-driven-public-health-projects-global-south
+[65] 2024 News - AI for Global Health Research https://ai-globalhealthresearch.tghn.org/news/news-old/
+[66] Regional Artificial Intelligence Initiative - Province of British Columbia https://www2.gov.bc.ca/gov/content/employment-business/economic-development/funding-and-grants/regional-artificial-intelligence-initiative
+[67] AI Sovereign Compute Infrastructure Program https://ised-isde.canada.ca/site/ised/en/ai-sovereign-compute-infrastructure-program
+[68] Global network using responsible AI: Health systems better ... https://idrc-crdi.ca/en/news/global-network-using-responsible-ai-health-systems-better-prepared-disease-outbreaks
+[69] Collaborative report unveils the transformative role of Artificial ... https://scienceforafrica.foundation/media-center/collaborative-report-unveils-transformative-role-artificial-intelligence-and-data
+[70] AI4GH: Responsive and responsible artificial intelligence for ... https://idrc-crdi.ca/en/what-we-do/projects-we-support/project/ai4gh-responsive-and-responsible-artificial-intelligence
+[71] IDRC AI4COVID Response Program - York University https://www.yorku.ca/science/mathstats/acadic/achievements/achievements-idrc-project/
+[72] Programme 2024 - Digital Health Africa https://digitalhealthafrica.org/home-2024/programme-2024/
+[73] News - AI for Global Health Research https://ai-globalhealthresearch.tghn.org/news/
