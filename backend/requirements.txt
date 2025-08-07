@@ -28,3 +28,4 @@ litellm
 torch
 aioredis
 cachetools
+redis

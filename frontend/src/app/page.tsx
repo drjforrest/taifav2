@@ -1,7 +1,20 @@
 "use client";
 
-import FundingChart from "../components/Homepage/FundingChart";
+import dynamic from "next/dynamic";
 import Announcements from "../components/Homepage/Announcements";
+
+// Dynamically import FundingChart to avoid loading react-tabs CSS on pages that don't use it
+const FundingChart = dynamic(() => import("../components/Homepage/FundingChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="animate-pulse">
+      <div 
+        className="rounded-lg h-96 w-full"
+        style={{ backgroundColor: "var(--color-muted)" }}
+      />
+    </div>
+  ),
+});
 import {
   Section1Text,
   Section2Text,

@@ -153,12 +153,29 @@ export function useETLMonitoring() {
         // Parse the actual response structure from the API
         const pipelines = responseData.pipelines;
         
+        // Helper function to determine if a pipeline is "active" (running or recently successful)
+        const isPipelineActive = (pipeline: any) => {
+          if (!pipeline) return false;
+          
+          // Currently running
+          if (pipeline.status === 'running') return true;
+          
+          // Recently completed successfully (within last 6 hours)
+          if (pipeline.last_run && pipeline.status === 'idle') {
+            const lastRun = new Date(pipeline.last_run);
+            const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+            return lastRun > sixHoursAgo;
+          }
+          
+          return false;
+        };
+        
         // Convert backend response to frontend ETLStatus format
         const status: ETLStatus = {
-          academic_pipeline_active: pipelines.academic_pipeline?.status === 'running',
-          news_pipeline_active: pipelines.news_pipeline?.status === 'running',
-          serper_pipeline_active: pipelines.discovery_pipeline?.status === 'running',
-          enrichment_pipeline_active: pipelines.enrichment_pipeline?.status === 'running',
+          academic_pipeline_active: isPipelineActive(pipelines.academic_pipeline),
+          news_pipeline_active: isPipelineActive(pipelines.news_pipeline),
+          serper_pipeline_active: isPipelineActive(pipelines.discovery_pipeline),
+          enrichment_pipeline_active: isPipelineActive(pipelines.enrichment_pipeline),
           last_academic_run: pipelines.academic_pipeline?.last_run,
           last_news_run: pipelines.news_pipeline?.last_run,
           last_serper_run: pipelines.discovery_pipeline?.last_run,
@@ -305,15 +322,21 @@ export function useETLMonitoring() {
   };
 
   const triggerEnrichment = async (
-    innovation_ids?: string[],
-    max_jobs: number = 10
+    intelligence_types: string[] = ["innovation_discovery", "funding_landscape"],
+    time_period: string = "last_7_days",
+    geographic_focus?: string[],
+    provider: string = "perplexity",
+    enable_snowball_sampling: boolean = true
   ) => {
     try {
       const result = await apiClient.post<APIResponse>(
         API_ENDPOINTS.etl.triggerEnrichment,
         { 
-          innovation_ids,
-          max_jobs
+          intelligence_types,
+          time_period,
+          geographic_focus,
+          provider,
+          enable_snowball_sampling
         }
       );
 

@@ -168,7 +168,7 @@ if echo "$DEV_CONFIG_RESPONSE" | grep -q '"skip_expensive_ops": true'; then
 else
     echo "🚀 Production/full mode - triggering all ETL jobs..."
     # Trigger ETL jobs
-    make_api_call "http://localhost:$API_PORT/api/etl/academic?days_back=7&max_results=5" "Academic paper collection (limited)"
+    make_api_call "http://localhost:$API_PORT/api/etl/academic?days_back=7&max_results=10" "Academic paper collection (limited)"
     make_api_call "http://localhost:$API_PORT/api/etl/news?hours_back=24" "News monitoring"
     make_api_call "http://localhost:$API_PORT/api/etl/serper-search?num_results=10" "Innovation search (limited)"
 fi

@@ -682,9 +682,9 @@ export default function DashboardStats() {
                         ),
                       }}
                     >
-                      {etlStatus?.academic_pipeline_active
+                    {etlStatus?.academic_pipeline_active
                         ? "Active"
-                        : "Inactive"}
+                        : (etlStatus?.last_academic_run ? "Ready" : "Inactive")}
                     </span>
                   </div>
                 </div>
@@ -812,7 +812,7 @@ export default function DashboardStats() {
                         ),
                       }}
                     >
-                      {etlStatus?.news_pipeline_active ? "Active" : "Inactive"}
+                      {etlStatus?.news_pipeline_active ? "Active" : (etlStatus?.last_news_run ? "Ready" : "Inactive")}
                     </Section3Text>
                   </div>
                 </div>
@@ -919,7 +919,7 @@ export default function DashboardStats() {
                     >
                       {etlStatus?.serper_pipeline_active
                         ? "Active"
-                        : "Inactive"}
+                        : (etlStatus?.last_serper_run ? "Ready" : "Inactive")}
                     </Section3Text>
                   </div>
                 </div>
@@ -1051,7 +1051,7 @@ export default function DashboardStats() {
                         ),
                       }}
                     >
-                      {etlStatus?.enrichment_pipeline_active ? "Active" : "Inactive"}
+                      {etlStatus?.enrichment_pipeline_active ? "Active" : (etlStatus?.last_enrichment_run ? "Ready" : "Inactive")}
                     </Section3Text>
                   </div>
                 </div>

@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Sync latest changes from local to production
 echo "📤 Syncing local changes to production..."
-rsync -avz -e "ssh -o Ciphers=aes256-gcm@openssh.com" --exclude='.git' --exclude='node_modules' --exclude='venv' --exclude='.next' --exclude='logs' --exclude='*.log' --exclude='__pycache__' --exclude='*.pyc' "$SCRIPT_DIR/" jforrest@100.75.201.24:production/TAIFA-FIALA/
+rsync -avz -e "ssh -o Ciphers=aes256-gcm@openssh.com" --exclude='.git' --exclude='node_modules' --exclude='venv' --exclude='.next' --exclude='logs' --exclude='*.log' --exclude='__pycache__' --exclude='*.pyc' --exclude='.env.local' "$SCRIPT_DIR/" jforrest@100.75.201.24:production/TAIFA-FIALA/
 
 
 # Copy .env files to production
