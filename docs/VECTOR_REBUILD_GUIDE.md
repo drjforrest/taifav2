@@ -1,3 +1,7 @@
+---
+order: 4
+---
+
 # Vector Database Rebuild Guide
 
 ## Overview

@@ -1,3 +1,6 @@
+---
+order: 11
+---
 
 # Original Research: How much money has been made available for AI Funding in Africa?
 

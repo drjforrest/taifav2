@@ -1,3 +1,7 @@
+---
+order: 10
+---
+
 # TAIFA-FIALA Refined Mission & Vision Statements
 
 ## Updated Mission Statement (About Page Hero)

@@ -1,3 +1,7 @@
+---
+order: 8
+---
+
 # TAIFA-FIALA Theme Implementation Guide
 
 ## Overview

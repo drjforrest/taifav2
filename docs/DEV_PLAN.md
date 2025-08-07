@@ -1,3 +1,7 @@
+---
+order: 9
+---
+
 TAIFA-FIALA Strategic Restructuring Plan
 From Funding Tracker to Innovation Archive
 Executive Summary

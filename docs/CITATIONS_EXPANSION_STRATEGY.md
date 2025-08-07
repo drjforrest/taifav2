@@ -1,3 +1,7 @@
+---
+order: 2
+---
+
 Goal: Prove value with public data first, then expand to premium
 datasets. Let's focus on data enhancement features that extract maximum
 intelligence from what you already have.

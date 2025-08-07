@@ -1,3 +1,7 @@
+---
+order: 7
+---
+
 # Adaptive Text System for Gradient Backgrounds
 
 ## Overview
