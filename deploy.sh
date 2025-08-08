@@ -13,9 +13,9 @@ rsync -avz -e "ssh -o Ciphers=aes256-gcm@openssh.com" --exclude='.git' --exclude
 
 # Copy .env files to production
 echo "📄 Copying .env files..."
-scp -o Ciphers=aes256-gcm@openssh.com "$SCRIPT_DIR/.env" jforrest@100.75.201.24:production/TAIFA-FIALA/
-scp -o Ciphers=aes256-gcm@openssh.com "$SCRIPT_DIR/.env" jforrest@100.75.201.24:production/TAIFA-FIALA/backend/.env
+# Copy frontend production environment file
 scp -o Ciphers=aes256-gcm@openssh.com "$SCRIPT_DIR/frontend/.env.production" jforrest@100.75.201.24:production/TAIFA-FIALA/frontend/.env.production
+# Note: Backend .env should be managed directly on production server to avoid overwriting production secrets
 
 # Deploy and restart services on production
 echo "🔄 Restarting services on production..."
@@ -62,15 +62,24 @@ kill_port 8030
 kill_port 3030
 
 # Stop existing services (fallback) 
+echo "🧹 Cleaning up old processes..."
 pkill -f "uvicorn\|npm.*start\|next.*start" || true
 
 # Clean up any remaining backend processes
 pkill -f "python.*uvicorn\|python.*main.py" || true
 pkill -f "start_backend.sh" || true
 
+# Clean up old npm/pnpm processes that might be lingering
+pkill -f "npm.*start" || true
+pkill -f "pnpm.*start" || true
+
+# Clean up old Python multiprocessing.resource_tracker processes (if safe)
+echo "🔍 Checking for old Python resource tracker processes..."
+ps aux | grep "multiprocessing.resource_tracker" | grep -v grep | awk '{print $2}' | head -5 | xargs -r kill -9 2>/dev/null || true
+
 sleep 5
 
-echo "🧹 Cleaning up old processes..."
+echo "✅ Process cleanup complete"
 
 # Install Python dependencies
 echo "📦 Installing Python dependencies..."
@@ -135,17 +144,18 @@ echo "Backend process check:"
 ps aux | grep "python.*main\|uvicorn" | grep -v grep || echo "❌ No backend process found"
 
 echo "Port 8030 check:"
-netstat -tlnp | grep :8030 || echo "❌ Port 8030 not listening"
+lsof -i :8030 && echo "✅ Port 8030 is listening" || echo "❌ Port 8030 not listening"
 
 echo "Testing backend endpoints:"
 curl -f http://localhost:8030/health && echo "✅ Backend health OK" || echo "❌ Backend health FAILED"
-curl -f http://localhost:8030/ && echo "✅ Backend root OK" || echo "❌ Backend root FAILED" 
+# Note: Backend root endpoint returns 404 by design (no root route defined)
+echo "ℹ️ Backend root endpoint returns 404 by design - this is expected"
 
 echo "Frontend process check:"
 ps aux | grep "npm.*start\|next.*start" | grep -v grep || echo "❌ No frontend process found"
 
 echo "Port 3030 check:"
-netstat -tlnp | grep :3030 || echo "❌ Port 3030 not listening"
+lsof -i :3030 && echo "✅ Port 3030 is listening" || echo "❌ Port 3030 not listening"
 
 echo "Testing frontend:"
 curl -f http://localhost:3030 && echo "✅ Frontend OK" || echo "❌ Frontend FAILED"
