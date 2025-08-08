@@ -3,9 +3,10 @@ Configuration settings for TAIFA-FIALA backend
 """
 
 import os
-from typing import Optional, List
-from pydantic_settings import BaseSettings
+from typing import List, Optional
+
 from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,6 +14,7 @@ load_dotenv()
 
 class Settings(BaseSettings):
     """Application settings"""
+
     # Application Settings
     APP_NAME: str = "TAIFA-FIALA API"
     APP_VERSION: str = "1.0.0"
@@ -37,7 +39,7 @@ class Settings(BaseSettings):
 
     # Database URL (can be override or constructed from components)
     DATABASE_URL: Optional[str] = None
-    
+
     @property
     def db_url(self) -> str:
         if self.DATABASE_URL:
@@ -84,7 +86,7 @@ class Settings(BaseSettings):
     # Background Tasks
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
-    
+
     # Development control flags (overridden in DevelopmentSettings)
     DISABLE_AI_ENRICHMENT: bool = False
     DISABLE_EXTERNAL_SEARCH: bool = False
@@ -100,7 +102,7 @@ class Settings(BaseSettings):
     PUBMED_BASE_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
     CROSSREF_BASE_URL: str = "https://api.crossref.org/works"
 
-    # RSS Feeds  
+    # RSS Feeds
     RSS_FEEDS: Optional[List[str]] = None
 
     @property
@@ -110,7 +112,7 @@ class Settings(BaseSettings):
             "https://techcabal.com/feed/",
             "https://ventureburn.com/feed/",
             "https://disrupt-africa.com/feed/",
-            "https://itnewsafrica.com/feed/"
+            "https://itnewsafrica.com/feed/",
         ]
 
     # File Storage
@@ -129,72 +131,131 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:3001",
         "https://taifa-fiala.vercel.app",
-        "https://taifa-fiala.net"
+        "https://taifa-fiala.net",
     ]
 
     # African Countries for ETL filtering
     AFRICAN_COUNTRIES: List[str] = [
-        "Algeria", "Angola", "Benin", "Botswana", "Burkina Faso", "Burundi",
-        "Cameroon", "Cape Verde", "Central African Republic", "Chad", "Comoros",
-        "Congo", "Democratic Republic of Congo", "Djibouti", "Egypt",
-        "Equatorial Guinea", "Eritrea", "Eswatini", "Ethiopia", "Gabon",
-        "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Ivory Coast", "Kenya",
-        "Lesotho", "Liberia", "Libya", "Madagascar", "Malawi", "Mali",
-        "Mauritania", "Mauritius", "Morocco", "Mozambique", "Namibia", "Niger",
-        "Nigeria", "Rwanda", "Sao Tome and Principe", "Senegal", "Seychelles",
-        "Sierra Leone", "Somalia", "South Africa", "South Sudan", "Sudan",
-        "Tanzania", "Togo", "Tunisia", "Uganda", "Zambia", "Zimbabwe"
+        "Algeria",
+        "Angola",
+        "Benin",
+        "Botswana",
+        "Burkina Faso",
+        "Burundi",
+        "Cameroon",
+        "Cape Verde",
+        "Central African Republic",
+        "Chad",
+        "Comoros",
+        "Congo",
+        "Democratic Republic of Congo",
+        "Djibouti",
+        "Egypt",
+        "Equatorial Guinea",
+        "Eritrea",
+        "Eswatini",
+        "Ethiopia",
+        "Gabon",
+        "Gambia",
+        "Ghana",
+        "Guinea",
+        "Guinea-Bissau",
+        "Ivory Coast",
+        "Kenya",
+        "Lesotho",
+        "Liberia",
+        "Libya",
+        "Madagascar",
+        "Malawi",
+        "Mali",
+        "Mauritania",
+        "Mauritius",
+        "Morocco",
+        "Mozambique",
+        "Namibia",
+        "Niger",
+        "Nigeria",
+        "Rwanda",
+        "Sao Tome and Principe",
+        "Senegal",
+        "Seychelles",
+        "Sierra Leone",
+        "Somalia",
+        "South Africa",
+        "South Sudan",
+        "Sudan",
+        "Tanzania",
+        "Togo",
+        "Tunisia",
+        "Uganda",
+        "Zambia",
+        "Zimbabwe",
     ]
 
     # African institutions for research filtering
     AFRICAN_INSTITUTIONS: List[str] = [
-        "University of Cape Town", "University of the Witwatersrand", "Stellenbosch University",
-        "Cairo University", "American University in Cairo", "University of Nairobi",
-        "Makerere University", "University of Ghana", "University of Lagos",
-        "Addis Ababa University", "Mohammed V University", "University of Tunis"
+        "University of Cape Town",
+        "University of the Witwatersrand",
+        "Stellenbosch University",
+        "Cairo University",
+        "American University in Cairo",
+        "University of Nairobi",
+        "Makerere University",
+        "University of Ghana",
+        "University of Lagos",
+        "Addis Ababa University",
+        "Mohammed V University",
+        "University of Tunis",
     ]
 
     # AI keywords for academic search
     AFRICAN_AI_KEYWORDS: List[str] = [
-        "artificial intelligence", "machine learning", "deep learning",
-        "neural networks", "computer vision", "natural language processing",
-        "data science", "automation", "robotics"
+        "artificial intelligence",
+        "machine learning",
+        "deep learning",
+        "neural networks",
+        "computer vision",
+        "natural language processing",
+        "data science",
+        "automation",
+        "robotics",
     ]
 
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": True,
-        "extra": "ignore"  # Ignore extra fields from environment
+        "extra": "ignore",  # Ignore extra fields from environment
     }
 
 
 class DevelopmentSettings(Settings):
     """Development environment settings"""
+
     DEBUG: bool = True
     LOG_LEVEL: str = "DEBUG"
-    
+
     # More permissive CORS for development
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",
-        "http://localhost:3001", 
+        "http://localhost:3001",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
         "https://taifa-fiala.vercel.app",
-        "https://taifa-fiala.net"
+        "https://taifa-fiala.net",
     ]
-    
+
     # Redis Configuration for development (use in-memory fallback if not available)
     REDIS_URL: str = "redis://localhost:6379/0"
     REDIS_REQUIRED: bool = False
-    
+
     # Development flags to disable expensive operations
     DISABLE_AI_ENRICHMENT: bool = True
     DISABLE_EXTERNAL_SEARCH: bool = True
     DISABLE_RSS_MONITORING: bool = True
     DISABLE_ACADEMIC_SCRAPING: bool = True
     ENABLE_MOCK_DATA: bool = True
-    
+
     # Limit batch sizes in development
     MAX_ETL_BATCH_SIZE: int = 5
     MAX_AI_CALLS_PER_MINUTE: int = 2
@@ -202,6 +263,7 @@ class DevelopmentSettings(Settings):
 
 class ProductionSettings(Settings):
     """Production environment settings"""
+
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
 

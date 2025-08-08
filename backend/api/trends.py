@@ -10,13 +10,12 @@ Provides API endpoints for Historical Trend Analysis including:
 Part of Phase 2 Implementation
 """
 
-import asyncio
-from datetime import date, datetime
+from datetime import date
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from config.database import get_supabase
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 from services.innovation_lifecycle_tracker import (

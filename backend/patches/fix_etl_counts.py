@@ -1,7 +1,7 @@
 """
 Fix for the ETL monitor today's totals calculation.
 
-This patch modifies the get_unified_status method in the ETLMonitor class to 
+This patch modifies the get_unified_status method in the ETLMonitor class to
 properly calculate today's totals by including recent successful runs (within last 24 hours)
 for better UX when the app is deployed in production.
 
@@ -11,10 +11,10 @@ Usage:
    python -m backend.patches.fix_etl_counts
 """
 
-from datetime import datetime, timedelta
 import json
 import os
 import sys
+from datetime import datetime
 
 # Add parent directory to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,16 +22,19 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from services.etl_monitor import etl_monitor
 except ImportError:
-    print("Error: Unable to import etl_monitor. Make sure you're running this script from the project root.")
+    print(
+        "Error: Unable to import etl_monitor. Make sure you're running this script from the project root."
+    )
     sys.exit(1)
+
 
 def apply_patch():
     """Apply the patch to fix the ETL monitor today's totals calculation."""
     print("Applying ETL monitor patch...")
-    
+
     # Backup the current get_unified_status method
     original_get_unified_status = etl_monitor.get_unified_status
-    
+
     # Define the patched method
     def patched_get_unified_status(self):
         """Patched version of the get_unified_status method with better today's totals calculation."""
@@ -46,16 +49,19 @@ def apply_patch():
             # Include recent successful runs (within last 24 hours) for better UX
             if status.last_run:
                 run_date = status.last_run.date()
-                hours_since_run = (datetime.now() - status.last_run).total_seconds() / 3600
-                
+                hours_since_run = (
+                    datetime.now() - status.last_run
+                ).total_seconds() / 3600
+
                 # Count as "today" if run today OR within last 24 hours
                 if run_date == today or hours_since_run <= 24:
                     if status.last_success and (
-                        status.last_success.date() == today or 
-                        (datetime.now() - status.last_success).total_seconds() / 3600 <= 24
+                        status.last_success.date() == today
+                        or (datetime.now() - status.last_success).total_seconds() / 3600
+                        <= 24
                     ):
                         total_processed_today += status.metrics.items_processed
-                    
+
                     if status.last_error and run_date == today:
                         errors_today += 1
 
@@ -297,14 +303,17 @@ def apply_patch():
             system_health=health_status,
             last_updated=datetime.now().isoformat(),
         )
-    
+
     # Apply the patch by monkey-patching the method
     import types
-    etl_monitor.get_unified_status = types.MethodType(patched_get_unified_status, etl_monitor)
-    
+
+    etl_monitor.get_unified_status = types.MethodType(
+        patched_get_unified_status, etl_monitor
+    )
+
     # Save the updated ETL status
     etl_monitor.save_status()
-    
+
     # Test the patch
     try:
         status = etl_monitor.get_unified_status()
@@ -318,78 +327,104 @@ def apply_patch():
         etl_monitor.get_unified_status = original_get_unified_status
         return False
 
+
 def create_data_completeness_fix():
     """Create a test file with data for the DataCompletenessWidget."""
     print("Creating test data for data completeness widget...")
-    
-    test_data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-                                  "data", "mock_completeness_data.json")
-    
+
+    test_data_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "data",
+        "mock_completeness_data.json",
+    )
+
     mock_data = {
         "missing_data_map": {
             "publications": {
                 "total_records": 96,
-                "completeness_matrix": [{"title": True, "abstract": True, "development_stage": False}],
+                "completeness_matrix": [
+                    {"title": True, "abstract": True, "development_stage": False}
+                ],
                 "field_completeness": {
                     "title": {"completeness_percentage": 100, "field_type": "core"},
                     "abstract": {"completeness_percentage": 92, "field_type": "core"},
-                    "development_stage": {"completeness_percentage": 65, "field_type": "enrichment"}
+                    "development_stage": {
+                        "completeness_percentage": 65,
+                        "field_type": "enrichment",
+                    },
                 },
                 "overall_completeness": 78.5,
                 "core_fields_completeness": 95.0,
-                "enrichment_fields_completeness": 58.2
+                "enrichment_fields_completeness": 58.2,
             },
             "innovations": {
                 "total_records": 24,
-                "completeness_matrix": [{"title": True, "description": True, "ai_techniques_used": False}],
+                "completeness_matrix": [
+                    {"title": True, "description": True, "ai_techniques_used": False}
+                ],
                 "field_completeness": {
                     "title": {"completeness_percentage": 100, "field_type": "core"},
-                    "description": {"completeness_percentage": 95, "field_type": "core"},
-                    "ai_techniques_used": {"completeness_percentage": 45, "field_type": "enrichment"}
+                    "description": {
+                        "completeness_percentage": 95,
+                        "field_type": "core",
+                    },
+                    "ai_techniques_used": {
+                        "completeness_percentage": 45,
+                        "field_type": "enrichment",
+                    },
                 },
                 "overall_completeness": 81.2,
                 "core_fields_completeness": 97.5,
-                "enrichment_fields_completeness": 61.8
+                "enrichment_fields_completeness": 61.8,
             },
             "intelligence_reports": {
                 "total_records": 5,
-                "completeness_matrix": [{"title": True, "report_type": True, "key_findings": True}],
+                "completeness_matrix": [
+                    {"title": True, "report_type": True, "key_findings": True}
+                ],
                 "field_completeness": {
                     "title": {"completeness_percentage": 100, "field_type": "core"},
-                    "report_type": {"completeness_percentage": 100, "field_type": "core"},
-                    "key_findings": {"completeness_percentage": 100, "field_type": "enrichment"}
+                    "report_type": {
+                        "completeness_percentage": 100,
+                        "field_type": "core",
+                    },
+                    "key_findings": {
+                        "completeness_percentage": 100,
+                        "field_type": "enrichment",
+                    },
                 },
                 "overall_completeness": 95.8,
                 "core_fields_completeness": 100.0,
-                "enrichment_fields_completeness": 92.0
-            }
+                "enrichment_fields_completeness": 92.0,
+            },
         },
         "recommendations": [
             "✅ Regular enrichment pipeline is running correctly",
-            "🟡 Consider enhancing publication development stage detection"
+            "🟡 Consider enhancing publication development stage detection",
         ],
         "analysis_timestamp": datetime.now().isoformat(),
         "summary": {
             "tables_analyzed": 3,
             "total_records_analyzed": 125,
-            "intelligence_table_exists": True
-        }
+            "intelligence_table_exists": True,
+        },
     }
-    
+
     # Create directory if it doesn't exist
     os.makedirs(os.path.dirname(test_data_path), exist_ok=True)
-    
+
     # Save the mock data
-    with open(test_data_path, 'w') as f:
+    with open(test_data_path, "w") as f:
         json.dump(mock_data, f, indent=2)
-    
+
     print(f"Mock data created at {test_data_path}")
+
 
 if __name__ == "__main__":
     # Create a directory for patches if it doesn't exist
     patches_dir = os.path.dirname(os.path.abspath(__file__))
     os.makedirs(patches_dir, exist_ok=True)
-    
+
     # Apply the ETL monitor patch
     if apply_patch():
         # Create test data for data completeness widget

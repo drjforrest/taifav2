@@ -3,25 +3,21 @@ Database configuration and session management for TAIFA-FIALA
 """
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from supabase import create_client, Client
+from supabase import Client, create_client
 
 from config.settings import settings
-
 
 # Supabase client for auth and real-time features
 supabase: Client = create_client(
     supabase_url=settings.NEXT_PUBLIC_SUPABASE_URL,
-    supabase_key=settings.SUPABASE_SECRET_KEY
+    supabase_key=settings.SUPABASE_SECRET_KEY,
 )
 
 # SQLAlchemy engine for direct database access
 engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    echo=settings.DEBUG
+    settings.DATABASE_URL, pool_pre_ping=True, pool_recycle=300, echo=settings.DEBUG
 )
 
 # Async engine for async operations
@@ -29,21 +25,14 @@ async_engine = create_async_engine(
     settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
     pool_pre_ping=True,
     pool_recycle=300,
-    echo=settings.DEBUG
+    echo=settings.DEBUG,
 )
 
 # Session factories
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 AsyncSessionLocal = sessionmaker(
-    class_=AsyncSession,
-    autocommit=False,
-    autoflush=False,
-    bind=async_engine
+    class_=AsyncSession, autocommit=False, autoflush=False, bind=async_engine
 )
 
 
