@@ -4,6 +4,7 @@ Innovation archive and data pipeline API
 """
 
 import asyncio
+import os
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID, uuid4
@@ -1738,10 +1739,13 @@ async def run_vector_rebuild(job_id: str, document_types: List[str]):
 if __name__ == "__main__":
     import uvicorn
 
+    # Use PORT from environment, settings, or default to 8030 for production compatibility
+    port = int(os.getenv("PORT", settings.PORT))
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8030,
+        port=port,
         reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower(),
     )

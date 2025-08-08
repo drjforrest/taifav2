@@ -137,7 +137,7 @@ export interface UseEnhancedDataCompletenessReturn {
   getSystematicIssues: (severity?: string) => SystematicIssue[];
 }
 
-const API_BASE_URL = '/api/enhanced-data-completeness';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8030'}/api/enhanced-data-completeness`;
 
 export const useEnhancedDataCompleteness = (
   options: UseEnhancedDataCompletenessOptions = {}

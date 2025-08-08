@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
+    PORT: int = 8030  # Default production port
 
     # Supabase Configuration
     SUPABASE_URL: str
