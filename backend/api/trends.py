@@ -335,6 +335,9 @@ async def get_domain_evolution(
     try:
         from services.domain_evolution_mapper import domain_evolution_mapper
 
+        # Initialize the domain evolution mapper if not already done
+        await domain_evolution_mapper.initialize()
+
         # Build query for domain evolution records
         supabase = get_supabase()
         query = supabase.table("domain_evolution").select("*")
@@ -371,6 +374,9 @@ async def get_domain_trends(
     """Get trend data for domains"""
     try:
         from services.domain_evolution_mapper import domain_evolution_mapper
+
+        # Initialize the domain evolution mapper if not already done
+        await domain_evolution_mapper.initialize()
 
         if domain_name:
             # Get trends for specific domain
@@ -430,6 +436,9 @@ async def get_emerging_domains(
     try:
         from services.domain_evolution_mapper import domain_evolution_mapper
 
+        # Initialize the domain evolution mapper if not already done
+        await domain_evolution_mapper.initialize()
+
         # Set default period if not provided (last 2 years)
         if not period_end:
             period_end = date.today()
@@ -473,6 +482,9 @@ async def get_research_focus_areas(
     try:
         from services.domain_evolution_mapper import domain_evolution_mapper
 
+        # Initialize the domain evolution mapper if not already done
+        await domain_evolution_mapper.initialize()
+
         # Set default period if not provided (last 1 year)
         if not period_end:
             period_end = date.today()
@@ -499,6 +511,9 @@ async def track_domain_evolution_endpoint(
     """Track domain evolution for a specific period"""
     try:
         from services.domain_evolution_mapper import domain_evolution_mapper
+
+        # Initialize the domain evolution mapper if not already done
+        await domain_evolution_mapper.initialize()
 
         success = await domain_evolution_mapper.track_domain_evolution(
             domain_name=domain_name, period_start=period_start, period_end=period_end

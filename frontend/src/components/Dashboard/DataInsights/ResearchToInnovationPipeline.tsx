@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Sankey } from 'recharts'
-import { TrendingUp, FileText, Lightbulb, ArrowRight, Clock, Award, Building2, Users, RefreshCw } from 'lucide-react'
 import { Section3Text } from '@/components/ui/adaptive-text'
+import { ArrowRight, Award, Building2, Clock, FileText, Lightbulb, RefreshCw, TrendingUp, Users } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 // Import the smart API detection
 const getApiBaseUrl = () => {
@@ -76,41 +76,70 @@ export default function ResearchToInnovationPipeline() {
       setError(null);
       if (isRefresh) setRefreshing(true);
 
-      // Fetch real statistics from the database
-      const statsResponse = await fetch(`${API_BASE_URL}/api/stats`);
+      // Fetch data from multiple sources including trends API
+      const [statsResponse, analyticsResponse, lifecycleResponse, timeToMarketResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/stats`),
+        fetch(`${API_BASE_URL}/api/data-intelligence/citations/network-analytics`),
+        fetch(`${API_BASE_URL}/api/trends/lifecycles`),
+        fetch(`${API_BASE_URL}/api/trends/time-to-market`)
+      ]);
+
+      let realLifecycleData = null;
+      let realTimeToMarketData = null;
+
+      // Get basic stats
       if (!statsResponse.ok) {
         throw new Error(`Failed to fetch stats: ${statsResponse.statusText}`);
       }
       const stats = await statsResponse.json();
 
-      // Fetch citation analytics
-      const analyticsResponse = await fetch(`${API_BASE_URL}/api/data-intelligence/citations/network-analytics`);
+      // Get analytics data
       if (!analyticsResponse.ok) {
         throw new Error(`Failed to fetch analytics: ${analyticsResponse.statusText}`);
       }
       const analyticsData = await analyticsResponse.json();
 
-      // Create realistic data based on actual database content
-      const transformedData: PipelineAnalytics = {
-        total_flows: analyticsData.knowledge_flow_analytics?.total_flows || 0,
-        average_time_to_market_days: 0, // Will be calculated when citation data is available
-        transformation_types: {}, // Will be populated when knowledge flow analysis completes
-        domain_transitions: [
-          // Approximate domain breakdown based on African AI focus
-          { domain: 'Healthcare AI', research_papers: Math.round(stats.total_publications * 0.25), innovations: Math.round(stats.total_innovations * 0.30), conversion_rate: 30.0 },
-          { domain: 'AgriTech', research_papers: Math.round(stats.total_publications * 0.20), innovations: Math.round(stats.total_innovations * 0.25), conversion_rate: 31.3 },
-          { domain: 'FinTech', research_papers: Math.round(stats.total_publications * 0.18), innovations: Math.round(stats.total_innovations * 0.20), conversion_rate: 27.8 },
-          { domain: 'EdTech', research_papers: Math.round(stats.total_publications * 0.15), innovations: Math.round(stats.total_innovations * 0.15), conversion_rate: 25.0 },
-          { domain: 'Climate Tech', research_papers: Math.round(stats.total_publications * 0.12), innovations: Math.round(stats.total_innovations * 0.10), conversion_rate: 20.8 },
-          { domain: 'Other AI', research_papers: Math.round(stats.total_publications * 0.10), innovations: Math.round(stats.total_innovations * 0.00), conversion_rate: 0.0 }
-        ],
-        timeline_data: [
-          // Show realistic timeline based on when data collection likely started
-          { month: 'Jul 2024', research_publications: Math.round(stats.total_publications * 0.15), innovations_launched: Math.round(stats.total_innovations * 0.10), knowledge_transfers: 0 },
-          { month: 'Aug 2024', research_publications: Math.round(stats.total_publications * 0.85), innovations_launched: Math.round(stats.total_innovations * 0.90), knowledge_transfers: analyticsData.knowledge_flow_analytics?.total_flows || 0 }
-        ],
-        top_knowledge_flows: [], // Will be populated when citation analysis completes
-      };
+      // Try to get real lifecycle data
+      if (lifecycleResponse.ok) {
+        realLifecycleData = await lifecycleResponse.json();
+      }
+
+      // Try to get real time-to-market data
+      if (timeToMarketResponse.ok) {
+        realTimeToMarketData = await timeToMarketResponse.json();
+      }
+
+      // Transform real lifecycle data if available
+      let transformedData: PipelineAnalytics;
+
+      if (realLifecycleData && realTimeToMarketData) {
+        transformedData = await transformLifecycleDataToComponentFormat(
+          realLifecycleData,
+          realTimeToMarketData,
+          stats,
+          analyticsData
+        );
+      } else {
+        // Fallback to mock data structure
+        transformedData = {
+          total_flows: analyticsData.knowledge_flow_analytics?.total_flows || 0,
+          average_time_to_market_days: realTimeToMarketData?.average_time_to_market_days || 0,
+          transformation_types: realLifecycleData?.transformation_types || {},
+          domain_transitions: [
+            { domain: 'Healthcare AI', research_papers: Math.round(stats.total_publications * 0.25), innovations: Math.round(stats.total_innovations * 0.30), conversion_rate: 30.0 },
+            { domain: 'AgriTech', research_papers: Math.round(stats.total_publications * 0.20), innovations: Math.round(stats.total_innovations * 0.25), conversion_rate: 31.3 },
+            { domain: 'FinTech', research_papers: Math.round(stats.total_publications * 0.18), innovations: Math.round(stats.total_innovations * 0.20), conversion_rate: 27.8 },
+            { domain: 'EdTech', research_papers: Math.round(stats.total_publications * 0.15), innovations: Math.round(stats.total_innovations * 0.15), conversion_rate: 25.0 },
+            { domain: 'Climate Tech', research_papers: Math.round(stats.total_publications * 0.12), innovations: Math.round(stats.total_innovations * 0.10), conversion_rate: 20.8 },
+            { domain: 'Other AI', research_papers: Math.round(stats.total_publications * 0.10), innovations: Math.round(stats.total_innovations * 0.00), conversion_rate: 0.0 }
+          ],
+          timeline_data: [
+            { month: 'Jul 2024', research_publications: Math.round(stats.total_publications * 0.15), innovations_launched: Math.round(stats.total_innovations * 0.10), knowledge_transfers: 0 },
+            { month: 'Aug 2024', research_publications: Math.round(stats.total_publications * 0.85), innovations_launched: Math.round(stats.total_innovations * 0.90), knowledge_transfers: analyticsData.knowledge_flow_analytics?.total_flows || 0 }
+          ],
+          top_knowledge_flows: realLifecycleData?.top_knowledge_flows || [],
+        };
+      }
 
       setData(transformedData);
 
@@ -121,6 +150,107 @@ export default function ResearchToInnovationPipeline() {
       setLoading(false);
       if (isRefresh) setRefreshing(false);
     }
+  };
+
+  const transformLifecycleDataToComponentFormat = async (
+    lifecycleData: any,
+    timeToMarketData: any,
+    stats: any,
+    analyticsData: any
+  ): Promise<PipelineAnalytics> => {
+    // Transform lifecycle analytics to pipeline format
+    const lifecycleStages = lifecycleData.lifecycle_stages || [];
+    const timeToMarketAnalysis = timeToMarketData.analysis || {};
+
+    // Calculate transformation types from lifecycle data
+    const transformationTypes: Record<string, number> = {};
+    lifecycleStages.forEach((stage: any) => {
+      const type = stage.transformation_type || 'direct';
+      transformationTypes[type] = (transformationTypes[type] || 0) + 1;
+    });
+
+    // Generate domain transitions from lifecycle data
+    const domainTransitions = generateDomainTransitionsFromLifecycle(lifecycleStages, stats);
+
+    // Generate timeline data from lifecycle progression
+    const timelineData = generateTimelineFromLifecycle(lifecycleStages, stats);
+
+    // Extract top knowledge flows from lifecycle data
+    const topKnowledgeFlows = extractKnowledgeFlowsFromLifecycle(lifecycleStages);
+
+    return {
+      total_flows: lifecycleStages.length,
+      average_time_to_market_days: timeToMarketAnalysis.average_days || 0,
+      transformation_types: transformationTypes,
+      domain_transitions: domainTransitions,
+      timeline_data: timelineData,
+      top_knowledge_flows: topKnowledgeFlows
+    };
+  };
+
+  const generateDomainTransitionsFromLifecycle = (lifecycleStages: any[], stats: any) => {
+    const domainCounts: Record<string, { research: number, innovations: number }> = {};
+    
+    lifecycleStages.forEach((stage: any) => {
+      const domain = stage.domain || 'Other AI';
+      if (!domainCounts[domain]) {
+        domainCounts[domain] = { research: 0, innovations: 0 };
+      }
+      domainCounts[domain].innovations += 1;
+      domainCounts[domain].research += stage.research_papers_count || 1;
+    });
+
+    return Object.entries(domainCounts).map(([domain, counts]) => ({
+      domain,
+      research_papers: counts.research,
+      innovations: counts.innovations,
+      conversion_rate: counts.research > 0 ? (counts.innovations / counts.research) * 100 : 0
+    }));
+  };
+
+  const generateTimelineFromLifecycle = (lifecycleStages: any[], stats: any) => {
+    // Group lifecycle stages by month
+    const monthlyData: Record<string, { research: number, innovations: number, transfers: number }> = {};
+    
+    lifecycleStages.forEach((stage: any) => {
+      const date = new Date(stage.start_date || Date.now());
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = { research: 0, innovations: 0, transfers: 0 };
+      }
+      
+      monthlyData[monthKey].innovations += 1;
+      monthlyData[monthKey].research += stage.research_papers_count || 1;
+      monthlyData[monthKey].transfers += stage.knowledge_transfer_count || 0;
+    });
+
+    return Object.entries(monthlyData).map(([month, data]) => ({
+      month,
+      research_publications: data.research,
+      innovations_launched: data.innovations,
+      knowledge_transfers: data.transfers
+    }));
+  };
+
+  const extractKnowledgeFlowsFromLifecycle = (lifecycleStages: any[]): KnowledgeFlowData[] => {
+    return lifecycleStages
+      .filter((stage: any) => stage.knowledge_flows && stage.knowledge_flows.length > 0)
+      .flatMap((stage: any) =>
+        stage.knowledge_flows.map((flow: any) => ({
+          source_publication_id: flow.source_publication_id || '',
+          target_innovation_id: flow.target_innovation_id || stage.innovation_id,
+          flow_strength: flow.flow_strength || 0.5,
+          time_to_market_days: flow.time_to_market_days || stage.duration_days || 0,
+          transformation_type: flow.transformation_type || 'direct',
+          publication_title: flow.publication_title || 'Research Publication',
+          innovation_title: flow.innovation_title || stage.innovation_title || 'Innovation',
+          publication_date: flow.publication_date || stage.start_date,
+          innovation_date: flow.innovation_date || stage.end_date,
+          research_domain: flow.research_domain || stage.domain || 'AI Research'
+        }))
+      )
+      .slice(0, 10); // Top 10 flows
   };
 
   const handleRefresh = () => {
