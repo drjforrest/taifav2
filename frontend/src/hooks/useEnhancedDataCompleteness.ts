@@ -276,22 +276,35 @@ export const useEnhancedDataCompleteness = (
     return issues;
   }, [recordAnalysis]);
 
-  // Auto-fetch on mount and table change
+  // Auto-fetch on mount only
   useEffect(() => {
     if (autoFetch) {
       fetchRecordAnalysis();
     }
-  }, [autoFetch, selectedTable, fetchRecordAnalysis]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoFetch]);
 
   // Update selected table handler
   const handleSetSelectedTable = useCallback((table: string) => {
+    if (table === selectedTable) {
+      return;
+    }
+    
     setSelectedTable(table);
     // Clear existing data when changing tables
     setRecordAnalysis(null);
     setProblematicRecords(null);
     setPatternDetection(null);
     setError(null);
-  }, []);
+    
+    // Explicitly fetch new data for the selected table
+    if (autoFetch) {
+      // Use setTimeout to ensure state update happens first
+      setTimeout(() => {
+        fetchRecordAnalysis(table);
+      }, 0);
+    }
+  }, [selectedTable, autoFetch, fetchRecordAnalysis]);
 
   return {
     // Data

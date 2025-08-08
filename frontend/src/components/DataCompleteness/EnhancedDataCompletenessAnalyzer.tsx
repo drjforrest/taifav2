@@ -713,11 +713,12 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
               <button
                 key={table}
                 onClick={() => setSelectedTable(table)}
+                disabled={loading}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                   selectedTable === table
                     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                     : 'bg-white text-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
-                } border border-gray-200 dark:border-gray-600`}
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''} border border-gray-200 dark:border-gray-600`}
               >
                 {table.replace('_', ' ')}
               </button>

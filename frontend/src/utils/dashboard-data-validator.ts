@@ -59,24 +59,50 @@ export class DashboardDataValidator {
     }
   }
 
-  private hasRealData(data: any, expectedFields: string[]): boolean {
+  private hasRealData(data: any, _expectedFields: string[]): boolean {
     if (!data || typeof data !== 'object') return false
 
     // Check for mock data indicators
     if (data._isMockData || data.mock || data.demo) return false
 
-    // Check if expected fields exist and have meaningful values
-    for (const field of expectedFields) {
-      const value = this.getNestedValue(data, field)
-      if (value === undefined || value === null || value === 0) {
-        continue // Some fields might legitimately be 0
+    // For stats endpoint, check if we have real database counts
+    if (data.total_innovations > 0 || data.total_publications > 0 || 
+        data.total_organizations > 0) {
+      return true
+    }
+
+    // For analytics endpoints, check summary data even if other fields are empty
+    if (data.summary) {
+      if (data.summary.total_innovations > 0 || data.summary.total_publications > 0 ||
+          data.summary.verified_innovations > 0) {
+        return true
       }
     }
 
-    // Check for meaningful data counts
-    if (data.total_innovations > 0 || data.total_publications > 0 || 
-        data.total_organizations > 0 || data.length > 0) {
+    // For arrays, check if we have data
+    if (Array.isArray(data) && data.length > 0) {
       return true
+    }
+
+    // For ETL status, having pipeline configuration counts as real data
+    if (data.success && data.data && data.data.pipelines) {
+      return true // ETL configuration exists even if pipelines haven't run recently
+    }
+
+    // Check if we have any meaningful non-zero numeric values
+    if (typeof data === 'object') {
+      for (const key in data) {
+        const value = data[key]
+        if (typeof value === 'number' && value > 0) {
+          return true
+        }
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          // Recursively check nested objects for real data
+          if (this.hasRealData(value, [])) {
+            return true
+          }
+        }
+      }
     }
 
     return false

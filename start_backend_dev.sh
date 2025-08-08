@@ -7,9 +7,9 @@ set -e  # Exit on any error
 
 # Configuration
 BACKEND_DIR="/Users/drjforrest/dev/devprojects/TAIFA-FIALA/backend"
-API_PORT=8000
-MAX_STARTUP_TIME=30
-HEALTH_CHECK_RETRIES=10
+API_PORT=8030
+MAX_STARTUP_TIME=60
+HEALTH_CHECK_RETRIES=20
 
 cd "$BACKEND_DIR"
 
@@ -78,11 +78,12 @@ echo "📖 Docs will be available at: http://localhost:$API_PORT/docs"
 
 # Wait for server to start with retries
 echo "⏳ Waiting for server to become ready..."
+sleep 5  # Give server extra time to initialize
 RETRY_COUNT=0
 SERVER_READY=false
 
 while [ $RETRY_COUNT -lt $HEALTH_CHECK_RETRIES ]; do
-    sleep 3
+    sleep 2
     RETRY_COUNT=$((RETRY_COUNT + 1))
 
     echo "🔍 Health check attempt $RETRY_COUNT/$HEALTH_CHECK_RETRIES..."
@@ -97,7 +98,7 @@ while [ $RETRY_COUNT -lt $HEALTH_CHECK_RETRIES ]; do
 done
 
 if [ "$SERVER_READY" = false ]; then
-    echo "❌ FastAPI server failed to start within $((HEALTH_CHECK_RETRIES * 3)) seconds"
+    echo "❌ FastAPI server failed to start within $((HEALTH_CHECK_RETRIES * 2)) seconds"
     echo "🔍 Checking if process is still running..."
 
     if kill -0 $FASTAPI_PID 2>/dev/null; then
