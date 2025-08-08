@@ -1,9 +1,9 @@
 'use client'
 
+import DataProvenance from '@/components/Dashboard/DataProvenance'
+import { PublicationFilters, usePublications } from '@/hooks/usePublications'
+import { Calendar, Cpu, ExternalLink, Globe, Search } from 'lucide-react'
 import { useState } from 'react'
-import { usePublications, PublicationFilters } from '@/hooks/usePublications'
-import { Search, Filter, ExternalLink, Calendar, Star, Globe, Cpu } from 'lucide-react'
-import DataProvenance from '@/components/ui/DataProvenance'
 
 export default function PublicationsTable() {
   const [filters, setFilters] = useState<PublicationFilters>({

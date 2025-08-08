@@ -1,8 +1,5 @@
-export { default as Button } from "./Button";
-export {
-  default as Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-  CardDescription,
-} from "./Card";
+export { Alert, AlertDescription, AlertTitle } from "./alert";
+export { Badge } from "./badge";
+export { default as Button } from "./button";
+export { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
+

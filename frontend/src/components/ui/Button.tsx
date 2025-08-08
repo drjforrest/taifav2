@@ -3,23 +3,25 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', size = 'md', className = '', children, style, onMouseEnter, onMouseLeave, ...props }, ref) => {
+  ({ variant = 'primary', size = 'md', className = '', children, style, onMouseEnter, onMouseLeave, disabled, ...props }, ref) => {
     const baseStyles = {
       fontWeight: '600',
       borderRadius: 'var(--radius-md)',
       transition: 'all 0.2s ease-in-out',
-      cursor: 'pointer',
+      cursor: disabled ? 'not-allowed' : 'pointer',
       border: 'none',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 'var(--spacing-sm)',
+      opacity: disabled ? 0.5 : 1,
+      outline: 'none',
     };
 
     const sizeStyles = {
@@ -44,24 +46,29 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       switch (variant) {
         case 'primary':
           return {
-            backgroundColor: isHover ? 'var(--color-primary-hover)' : 'var(--color-primary)',
-            color: 'var(--color-primary-foreground)',
+            backgroundColor: isHover ? '#2563eb' : '#3b82f6',
+            color: 'white',
           };
         case 'secondary':
           return {
-            backgroundColor: isHover ? 'var(--color-secondary-hover)' : 'var(--color-secondary)',
-            color: 'var(--color-secondary-foreground)',
+            backgroundColor: isHover ? '#e2e8f0' : '#f1f5f9',
+            color: '#475569',
           };
         case 'outline':
           return {
-            backgroundColor: isHover ? 'var(--color-muted)' : 'transparent',
-            color: 'var(--color-foreground)',
-            border: '1px solid var(--color-border)',
+            backgroundColor: isHover ? '#f8fafc' : 'transparent',
+            color: '#374151',
+            border: '1px solid #d1d5db',
           };
         case 'ghost':
           return {
-            backgroundColor: isHover ? 'var(--color-muted)' : 'transparent',
-            color: 'var(--color-foreground)',
+            backgroundColor: isHover ? '#f8fafc' : 'transparent',
+            color: '#374151',
+          };
+        case 'destructive':
+          return {
+            backgroundColor: isHover ? '#dc2626' : '#ef4444',
+            color: 'white',
           };
         default:
           return {};
@@ -69,15 +76,19 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-      const hoverStyles = getVariantStyles(true);
-      Object.assign(e.currentTarget.style, hoverStyles);
-      onMouseEnter?.(e);
+      if (!disabled) {
+        const hoverStyles = getVariantStyles(true);
+        Object.assign(e.currentTarget.style, hoverStyles);
+        onMouseEnter?.(e);
+      }
     };
 
     const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
-      const normalStyles = getVariantStyles(false);
-      Object.assign(e.currentTarget.style, normalStyles);
-      onMouseLeave?.(e);
+      if (!disabled) {
+        const normalStyles = getVariantStyles(false);
+        Object.assign(e.currentTarget.style, normalStyles);
+        onMouseLeave?.(e);
+      }
     };
 
     const combinedStyles = {
@@ -94,6 +105,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         style={combinedStyles}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        disabled={disabled}
         {...props}
       >
         {children}

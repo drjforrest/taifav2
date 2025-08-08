@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import DataProvenance from '@/components/Dashboard/DataProvenance'
 import { Section3Text } from '@/components/ui/adaptive-text'
-import { TrendingUp, FileText, Lightbulb, Zap, Clock, CheckCircle, AlertCircle, Globe, Cpu } from 'lucide-react'
-import DataProvenance from '@/components/ui/DataProvenance'
+import { AlertCircle, CheckCircle, Clock, Cpu, FileText, Globe, Lightbulb, TrendingUp, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8030'
 
