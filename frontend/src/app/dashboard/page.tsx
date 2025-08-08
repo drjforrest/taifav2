@@ -369,212 +369,33 @@ export default function DashboardStats() {
       </section>
 
       {/* Tab Navigation */}
-      <section
-        className="py-4"
-        style={{ backgroundColor: "var(--color-background-section-2)" }}
-      >
+      <section className="py-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="border-b" style={{ borderColor: "var(--color-border)" }}>
-            <nav className="flex space-x-4">
-              <button
-                onClick={() => setActiveTab('monitoring')}
-                className="flex items-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
-                style={{
-                  padding: "12px 20px",
-                  backgroundColor: activeTab === 'monitoring' ? 'var(--color-primary)' : 'var(--color-background)',
-                  color: activeTab === 'monitoring' ? 'var(--color-primary-foreground)' : 'var(--color-muted-foreground)',
-                  border: `1px solid ${activeTab === 'monitoring' ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  boxShadow: activeTab === 'monitoring' ? "0 2px 6px rgba(0, 0, 0, 0.12)" : "0 1px 3px rgba(0, 0, 0, 0.1)",
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== 'monitoring') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                    e.currentTarget.style.color = 'var(--color-primary-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== 'monitoring') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-background)';
-                    e.currentTarget.style.color = 'var(--color-muted-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-border)';
-                  }
-                }}
-              >
-                <Activity className="h-4 w-4 mr-2" />
-                ETL Monitoring
-              </button>
-              <button
-                onClick={() => setActiveTab('pipeline')}
-                className="flex items-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
-                style={{
-                  padding: "12px 20px",
-                  backgroundColor: activeTab === 'pipeline' ? 'var(--color-primary)' : 'var(--color-background)',
-                  color: activeTab === 'pipeline' ? 'var(--color-primary-foreground)' : 'var(--color-muted-foreground)',
-                  border: `1px solid ${activeTab === 'pipeline' ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  boxShadow: activeTab === 'pipeline' ? "0 2px 6px rgba(0, 0, 0, 0.12)" : "0 1px 3px rgba(0, 0, 0, 0.1)",
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== 'pipeline') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                    e.currentTarget.style.color = 'var(--color-primary-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== 'pipeline') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-background)';
-                    e.currentTarget.style.color = 'var(--color-muted-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-border)';
-                  }
-                }}
-              >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Research Pipeline
-              </button>
-              <button
-                onClick={() => setActiveTab('collaboration')}
-                className="flex items-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
-                style={{
-                  padding: "12px 20px",
-                  backgroundColor: activeTab === 'collaboration' ? 'var(--color-primary)' : 'var(--color-background)',
-                  color: activeTab === 'collaboration' ? 'var(--color-primary-foreground)' : 'var(--color-muted-foreground)',
-                  border: `1px solid ${activeTab === 'collaboration' ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  boxShadow: activeTab === 'collaboration' ? "0 2px 6px rgba(0, 0, 0, 0.12)" : "0 1px 3px rgba(0, 0, 0, 0.1)",
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== 'collaboration') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                    e.currentTarget.style.color = 'var(--color-primary-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== 'collaboration') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-background)';
-                    e.currentTarget.style.color = 'var(--color-muted-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-border)';
-                  }
-                }}
-              >
-                <Network className="h-4 w-4 mr-2" />
-                Collaboration
-              </button>
-              <button
-                onClick={() => setActiveTab('technology')}
-                className="flex items-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
-                style={{
-                  padding: "12px 20px",
-                  backgroundColor: activeTab === 'technology' ? 'var(--color-primary)' : 'var(--color-background)',
-                  color: activeTab === 'technology' ? 'var(--color-primary-foreground)' : 'var(--color-muted-foreground)',
-                  border: `1px solid ${activeTab === 'technology' ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  boxShadow: activeTab === 'technology' ? "0 2px 6px rgba(0, 0, 0, 0.12)" : "0 1px 3px rgba(0, 0, 0, 0.1)",
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== 'technology') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                    e.currentTarget.style.color = 'var(--color-primary-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== 'technology') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-background)';
-                    e.currentTarget.style.color = 'var(--color-muted-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-border)';
-                  }
-                }}
-              >
-                <Target className="h-4 w-4 mr-2" />
-                Technology Trends
-              </button>
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className="flex items-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
-                style={{
-                  padding: "12px 20px",
-                  backgroundColor: activeTab === 'analytics' ? 'var(--color-primary)' : 'var(--color-background)',
-                  color: activeTab === 'analytics' ? 'var(--color-primary-foreground)' : 'var(--color-muted-foreground)',
-                  border: `1px solid ${activeTab === 'analytics' ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  boxShadow: activeTab === 'analytics' ? "0 2px 6px rgba(0, 0, 0, 0.12)" : "0 1px 3px rgba(0, 0, 0, 0.1)",
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== 'analytics') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                    e.currentTarget.style.color = 'var(--color-primary-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== 'analytics') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-background)';
-                    e.currentTarget.style.color = 'var(--color-muted-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-border)';
-                  }
-                }}
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Real-time Analytics
-              </button>
-              <button
-                onClick={() => setActiveTab('rss')}
-                className="flex items-center transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
-                style={{
-                  padding: "12px 20px",
-                  backgroundColor: activeTab === 'rss' ? 'var(--color-primary)' : 'var(--color-background)',
-                  color: activeTab === 'rss' ? 'var(--color-primary-foreground)' : 'var(--color-muted-foreground)',
-                  border: `1px solid ${activeTab === 'rss' ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  boxShadow: activeTab === 'rss' ? "0 2px 6px rgba(0, 0, 0, 0.12)" : "0 1px 3px rgba(0, 0, 0, 0.1)",
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== 'rss') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                    e.currentTarget.style.color = 'var(--color-primary-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== 'rss') {
-                    e.currentTarget.style.backgroundColor = 'var(--color-background)';
-                    e.currentTarget.style.color = 'var(--color-muted-foreground)';
-                    e.currentTarget.style.borderColor = 'var(--color-border)';
-                  }
-                }}
-              >
-                <Rss className="h-4 w-4 mr-2" />
-                RSS Feed
-              </button>
-            </nav>
+          <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+            {[
+              { key: 'monitoring', label: 'ETL Monitoring', icon: Activity },
+              { key: 'pipeline', label: 'Research Pipeline', icon: TrendingUp },
+              { key: 'collaboration', label: 'Collaboration', icon: Network },
+              { key: 'technology', label: 'Technology Trends', icon: Target },
+              { key: 'analytics', label: 'Real-time Analytics', icon: BarChart3 },
+              { key: 'rss', label: 'RSS Feed', icon: Rss }
+            ].map((tab) => {
+              const IconComponent = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
+                    activeTab === tab.key
+                      ? 'border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  <IconComponent className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1154,7 +975,7 @@ export default function DashboardStats() {
                     className="h-5 w-5 mr-2"
                     style={{ color: "var(--color-accent)" }}
                   />
-                  Today's Activity
+{(etlStatus as any)?._showingRecentData ? "Recent Activity (7 days)" : "Today's Activity"}
                 </div>
                 {(etlStatus as any)?._isMockData && (
                   <span className="text-xs px-2 py-1 rounded bg-orange-100 text-orange-800">

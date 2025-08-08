@@ -216,8 +216,37 @@ export function useETLMonitoring() {
           return false;
         };
         
+        // Calculate recent activity if today's activity is zero
+        const backendTotalToday = responseData.total_processed_today || 0;
+        const backendErrorsToday = responseData.errors_today || 0;
+        
+        let totalProcessedToday = backendTotalToday;
+        let errorsToday = backendErrorsToday;
+        
+        // If no activity today, show recent activity from last few days for better UX
+        if (totalProcessedToday === 0) {
+          const allPipelines = [
+            pipelines.academic_pipeline,
+            pipelines.news_pipeline,
+            pipelines.discovery_pipeline,
+            pipelines.enrichment_pipeline
+          ];
+          
+          for (const pipeline of allPipelines) {
+            if (pipeline?.metrics?.items_processed && pipeline.last_run) {
+              const lastRun = new Date(pipeline.last_run);
+              const daysSince = (Date.now() - lastRun.getTime()) / (1000 * 60 * 60 * 24);
+              
+              // Include activity from last 7 days when today's count is zero
+              if (daysSince <= 7) {
+                totalProcessedToday += pipeline.metrics.items_processed || 0;
+              }
+            }
+          }
+        }
+
         // Convert backend response to frontend ETLStatus format
-        const status: ETLStatus = {
+        const status: ETLStatus & { _showingRecentData?: boolean } = {
           academic_pipeline_active: isPipelineActive(pipelines.academic_pipeline),
           news_pipeline_active: isPipelineActive(pipelines.news_pipeline),
           serper_pipeline_active: isPipelineActive(pipelines.discovery_pipeline),
@@ -226,8 +255,9 @@ export function useETLMonitoring() {
           last_news_run: pipelines.news_pipeline?.last_run,
           last_serper_run: pipelines.discovery_pipeline?.last_run,
           last_enrichment_run: pipelines.enrichment_pipeline?.last_run,
-          total_processed_today: responseData.total_processed_today || 0,
-          errors_today: responseData.errors_today || 0,
+          total_processed_today: totalProcessedToday,
+          errors_today: errorsToday,
+          _showingRecentData: backendTotalToday === 0 && totalProcessedToday > 0,
         };
 
         const health: ETLHealth = {

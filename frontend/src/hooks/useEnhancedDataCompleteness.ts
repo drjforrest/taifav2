@@ -137,7 +137,9 @@ export interface UseEnhancedDataCompletenessReturn {
   getSystematicIssues: (severity?: string) => SystematicIssue[];
 }
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8030'}/api/enhanced-data-completeness`;
+import { apiClient } from '@/lib/api-client';
+
+const API_BASE_URL = '/api/enhanced-data-completeness';
 
 export const useEnhancedDataCompleteness = (
   options: UseEnhancedDataCompletenessOptions = {}
@@ -170,18 +172,12 @@ export const useEnhancedDataCompleteness = (
         include_patterns: includePatterns.toString()
       });
       
-      const response = await fetch(`${API_BASE_URL}/record-level-analysis?${params}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiClient.get(`${API_BASE_URL}/record-level-analysis?${params}`) as RecordLevelResponse;
       setRecordAnalysis(data);
       
       // If this is an error response, handle it
-      if (data.error) {
-        setError(data.error);
+      if ((data as any).error) {
+        setError((data as any).error);
       }
       
     } catch (err) {
@@ -208,13 +204,7 @@ export const useEnhancedDataCompleteness = (
         sort_by: sortBy
       });
       
-      const response = await fetch(`${API_BASE_URL}/problematic-records?${params}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiClient.get(`${API_BASE_URL}/problematic-records?${params}`) as ProblematicRecordsResponse;
       setProblematicRecords(data);
       
     } catch (err) {
@@ -236,13 +226,7 @@ export const useEnhancedDataCompleteness = (
         pattern_type: patternType
       });
       
-      const response = await fetch(`${API_BASE_URL}/pattern-detection?${params}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiClient.get(`${API_BASE_URL}/pattern-detection?${params}`) as PatternDetectionResponse;
       setPatternDetection(data);
       
     } catch (err) {

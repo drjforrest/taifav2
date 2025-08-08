@@ -614,12 +614,49 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
     );
   }
 
+  if (!loading && !analysisData) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Enhanced Data Completeness Analysis</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Detailed record-level analysis with pattern detection for missing data
+            </p>
+          </div>
+          <Button
+            onClick={() => refresh()}
+            disabled={loading}
+            variant="outline"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
+            Refresh
+          </Button>
+        </div>
+        
+        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+          <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+          <AlertDescription className="text-amber-700 dark:text-amber-300">
+            No data available. The enhanced data completeness analysis may not be configured or there may be no data to analyze.
+            <br />
+            <span className="text-sm">Try clicking refresh or check that the backend endpoints are properly configured.</span>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Enhanced Data Completeness Analysis</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Enhanced Data Completeness Analysis</h2>
           <p className="text-gray-600 dark:text-gray-400">
             Detailed record-level analysis with pattern detection for missing data
           </p>
@@ -638,19 +675,6 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
         </Button>
       </div>
 
-      {/* Table Selection */}
-      <div className="flex gap-2">
-        {tables.map((table) => (
-          <Button
-            key={table}
-            variant={selectedTable === table ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedTable(table)}
-          >
-            {table.replace('_', ' ')}
-          </Button>
-        ))}
-      </div>
 
       {/* Tab Navigation */}
       <div className="flex gap-2 border-b">
@@ -676,6 +700,30 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
             </button>
           );
         })}
+      </div>
+
+      {/* Table Selection Filter */}
+      <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Data Source:
+          </label>
+          <div className="flex gap-1">
+            {tables.map((table) => (
+              <button
+                key={table}
+                onClick={() => setSelectedTable(table)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  selectedTable === table
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
+                } border border-gray-200 dark:border-gray-600`}
+              >
+                {table.replace('_', ' ')}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Tab Content */}
