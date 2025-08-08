@@ -14,7 +14,6 @@ This service integrates with:
 - backend/services/enhanced_publication_service.py
 """
 
-import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -994,8 +993,11 @@ class SuccessPatternIdentifier:
             True if integration was successful, False otherwise
         """
         try:
-            # This method would coordinate with the domain evolution mapper
-            # For now, we'll just log that integration is available
+            # Initialize the domain evolution mapper
+            if not await domain_evolution_mapper.initialize():
+                logger.error("Failed to initialize domain evolution mapper")
+                return False
+
             logger.info(
                 "Success Pattern Identifier integrated with Domain Evolution Mapper"
             )
@@ -1012,8 +1014,11 @@ class SuccessPatternIdentifier:
             True if integration was successful, False otherwise
         """
         try:
-            # This method would coordinate with the publication service
-            # For now, we'll just log that integration is available
+            # Initialize the enhanced publication service
+            if not await enhanced_publication_service.initialize():
+                logger.error("Failed to initialize enhanced publication service")
+                return False
+
             logger.info(
                 "Success Pattern Identifier integrated with Enhanced Publication Service"
             )

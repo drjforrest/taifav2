@@ -1,115 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Alert, AlertDescription } from '@/components/ui';
-import { Loader2, RefreshCw, AlertCircle, CheckCircle, XCircle, Database, TrendingDown } from 'lucide-react';
-
-interface FieldCompleteness {
-  completeness_percentage: number;
-  complete_records: number;
-  missing_records: number;
-  field_type: 'core' | 'enrichment';
-}
-
-interface TableAnalysis {
-  total_records: number;
-  completeness_matrix: Record<string, boolean>[];
-  field_completeness: Record<string, FieldCompleteness>;
-  overall_completeness: number;
-  core_fields_completeness: number;
-  enrichment_fields_completeness: number;
-  error?: string;
-}
-
-interface MissingDataMap {
-  missing_data_map: Record<string, TableAnalysis>;
-  recommendations: string[];
-  analysis_timestamp: string;
-  summary: {
-    tables_analyzed: number;
-    total_records_analyzed: number;
-    intelligence_table_exists: boolean;
-  };
-}
-
-interface CriticalGap {
-  type: string;
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  description: string;
-  impact: string;
-  affected_records: number;
-  recommended_action: string;
-}
-
-interface EnrichmentGaps {
-  gaps_analysis: {
-    publications_gaps: Record<string, number>;
-    innovations_gaps: Record<string, number>;
-    intelligence_gaps: {
-      reports_exist: boolean;
-      total_reports: number;
-      intelligence_gap_severity: string;
-    };
-    critical_missing_data: CriticalGap[];
-  };
-  actionable_insights: string[];
-}
+import { Alert, AlertDescription, Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
+import {
+  getCompletenessTextColor,
+  useDataCompleteness,
+  type TableAnalysis
+} from '@/hooks/useDataCompleteness';
+import { AlertCircle, Database, Loader2, RefreshCw, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
 
 const DataCompletenessWidget: React.FC = () => {
-  const [missingDataMap, setMissingDataMap] = useState<MissingDataMap | null>(null);
-  const [enrichmentGaps, setEnrichmentGaps] = useState<EnrichmentGaps | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { missingDataMap, enrichmentGaps, loading, error, refresh } = useDataCompleteness();
   const [expanded, setExpanded] = useState(false);
-
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const [mapResponse, gapsResponse] = await Promise.all([
-        fetch('/api/data-completeness/intelligence-enrichment/missing-data-map'),
-        fetch('/api/data-completeness/enrichment-gaps/analysis')
-      ]);
-
-      if (!mapResponse.ok) {
-        throw new Error(`Missing data map: HTTP ${mapResponse.status}`);
-      }
-      if (!gapsResponse.ok) {
-        throw new Error(`Enrichment gaps: HTTP ${gapsResponse.status}`);
-      }
-
-      const mapData = await mapResponse.json();
-      const gapsData = await gapsResponse.json();
-      
-      setMissingDataMap(mapData);
-      setEnrichmentGaps(gapsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data completeness');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const getCompletenessColor = (percentage: number): string => {
-    if (percentage >= 80) return 'text-green-600';
-    if (percentage >= 60) return 'text-yellow-600';
-    if (percentage >= 40) return 'text-orange-600';
-    return 'text-red-600';
-  };
-
-  const getSeverityColor = (severity: string): string => {
-    switch (severity) {
-      case 'critical': return 'text-red-600 bg-red-100';
-      case 'high': return 'text-orange-600 bg-orange-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      default: return 'text-green-600 bg-green-100';
-    }
-  };
 
   const renderMiniDotMatrix = (tableData: TableAnalysis, maxRows = 10, maxCols = 10) => {
     const { completeness_matrix, field_completeness } = tableData;
@@ -197,7 +99,7 @@ const DataCompletenessWidget: React.FC = () => {
             Intelligence Enrichment Status
           </div>
           <Button
-            onClick={fetchData}
+            onClick={refresh}
             disabled={loading}
             variant="outline"
             size="sm"
@@ -225,7 +127,7 @@ const DataCompletenessWidget: React.FC = () => {
         <div className="grid grid-cols-3 gap-3">
           {Object.entries(missingDataMap.missing_data_map).map(([tableName, tableData]) => (
             <div key={tableName} className="text-center p-2 bg-gray-50 rounded">
-              <div className={`text-lg font-bold ${getCompletenessColor(tableData.enrichment_fields_completeness)}`}>
+              <div className={`text-lg font-bold ${getCompletenessTextColor(tableData.enrichment_fields_completeness)}`}>
                 {tableData.enrichment_fields_completeness.toFixed(0)}%
               </div>
               <div className="text-xs text-gray-600">{tableName}</div>

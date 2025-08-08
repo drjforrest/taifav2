@@ -1,124 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/badge';
 import Button from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, RefreshCw, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
-
-interface FieldCompleteness {
-  completeness_percentage: number;
-  complete_records: number;
-  missing_records: number;
-  field_type: 'core' | 'enrichment';
-}
-
-interface TableAnalysis {
-  total_records: number;
-  completeness_matrix: Record<string, boolean>[];
-  field_completeness: Record<string, FieldCompleteness>;
-  overall_completeness: number;
-  core_fields_completeness: number;
-  enrichment_fields_completeness: number;
-  error?: string;
-}
-
-interface MissingDataMap {
-  missing_data_map: Record<string, TableAnalysis>;
-  recommendations: string[];
-  analysis_timestamp: string;
-  summary: {
-    tables_analyzed: number;
-    total_records_analyzed: number;
-    intelligence_table_exists: boolean;
-  };
-}
-
-interface CriticalGap {
-  type: string;
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  description: string;
-  impact: string;
-  affected_records: number;
-  recommended_action: string;
-}
-
-interface EnrichmentGaps {
-  gaps_analysis: {
-    publications_gaps: Record<string, number>;
-    innovations_gaps: Record<string, number>;
-    intelligence_gaps: {
-      reports_exist: boolean;
-      total_reports: number;
-      intelligence_gap_severity: string;
-    };
-    critical_missing_data: CriticalGap[];
-    enrichment_priority: Array<{
-      task: string;
-      priority_score: number;
-      justification: string;
-      estimated_effort: string;
-      expected_impact: string;
-    }>;
-  };
-  actionable_insights: string[];
-}
+import { Badge } from '@/components/ui/badge';
+import {
+  getCompletenessColor,
+  getCompletenessColorClass,
+  useDataCompleteness,
+  type TableAnalysis
+} from '@/hooks/useDataCompleteness';
+import { AlertCircle, CheckCircle, Loader2, RefreshCw, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
 
 const DataCompletenessHeatmap: React.FC = () => {
-  const [missingDataMap, setMissingDataMap] = useState<MissingDataMap | null>(null);
-  const [enrichmentGaps, setEnrichmentGaps] = useState<EnrichmentGaps | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { missingDataMap, enrichmentGaps, loading, error, refresh } = useDataCompleteness();
   const [selectedTable, setSelectedTable] = useState<string>('publications');
-
-  const fetchMissingDataMap = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch('/api/data-completeness/intelligence-enrichment/missing-data-map');
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const data = await response.json();
-      setMissingDataMap(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch missing data map');
-    }
-  };
-
-  const fetchEnrichmentGaps = async () => {
-    try {
-      const response = await fetch('/api/data-completeness/enrichment-gaps/analysis');
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const data = await response.json();
-      setEnrichmentGaps(data);
-    } catch (err) {
-      console.error('Failed to fetch enrichment gaps:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchMissingDataMap();
-    fetchEnrichmentGaps();
-  }, []);
-
-  const getCompletenessColor = (percentage: number): string => {
-    if (percentage >= 80) return 'bg-green-500';
-    if (percentage >= 60) return 'bg-yellow-500';
-    if (percentage >= 40) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
-
-  const getCompletenessColorClass = (percentage: number): string => {
-    if (percentage >= 80) return 'text-green-700 bg-green-100';
-    if (percentage >= 60) return 'text-yellow-700 bg-yellow-100';
-    if (percentage >= 40) return 'text-orange-700 bg-orange-100';
-    return 'text-red-700 bg-red-100';
-  };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
@@ -296,10 +193,7 @@ const DataCompletenessHeatmap: React.FC = () => {
           </p>
         </div>
         <Button
-          onClick={() => {
-            fetchMissingDataMap();
-            fetchEnrichmentGaps();
-          }}
+          onClick={refresh}
           disabled={loading}
           variant="outline"
         >

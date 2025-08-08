@@ -4,18 +4,18 @@ Pinecone integration for Dense inference-enabled index with multilingual-e5-larg
 """
 
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from pinecone import Pinecone
-from loguru import logger
-from pydantic import BaseModel
-
 from config.settings import settings
+from loguru import logger
+from pinecone import Pinecone
+from pydantic import BaseModel
 
 
 class VectorDocument(BaseModel):
     """Document for vector storage"""
+
     id: str
     content: str
     metadata: Dict[str, Any]
@@ -23,6 +23,7 @@ class VectorDocument(BaseModel):
 
 class SearchResult(BaseModel):
     """Vector search result"""
+
     id: str
     score: float
     metadata: Dict[str, Any]
@@ -80,11 +81,11 @@ class VectorService:
             response = self.pc.inference.embed(
                 model="multilingual-e5-large",
                 inputs=[text],
-                parameters={"input_type": "passage"}
+                parameters={"input_type": "passage"},
             )
 
             if response and len(response) > 0:
-                return response[0]['values']
+                return response[0]["values"]
             else:
                 logger.error("Empty embedding response from Pinecone")
                 return []
@@ -104,7 +105,7 @@ class VectorService:
             success_count = 0
 
             for i in range(0, len(documents), batch_size):
-                batch = documents[i:i+batch_size]
+                batch = documents[i : i + batch_size]
                 vectors_to_upsert = []
 
                 for doc in batch:
@@ -125,8 +126,10 @@ class VectorService:
                         "values": embedding,
                         "metadata": {
                             **doc.metadata,
-                            "text": prepared_text[:1000]  # Store truncated text for retrieval
-                        }
+                            "text": prepared_text[
+                                :1000
+                            ],  # Store truncated text for retrieval
+                        },
                     }
                     vectors_to_upsert.append(vector)
 
@@ -135,7 +138,9 @@ class VectorService:
                     try:
                         self.index.upsert(vectors=vectors_to_upsert)
                         success_count += len(vectors_to_upsert)
-                        logger.info(f"Upserted batch {i//batch_size + 1}/{(len(documents)-1)//batch_size + 1} - {len(vectors_to_upsert)} vectors")
+                        logger.info(
+                            f"Upserted batch {i // batch_size + 1}/{(len(documents) - 1) // batch_size + 1} - {len(vectors_to_upsert)} vectors"
+                        )
                     except Exception as batch_error:
                         logger.error(f"Batch upsert failed: {batch_error}")
                         continue
@@ -144,15 +149,21 @@ class VectorService:
                 if len(documents) > batch_size:
                     await asyncio.sleep(0.2)
 
-            logger.info(f"Successfully upserted {success_count}/{len(documents)} documents")
+            logger.info(
+                f"Successfully upserted {success_count}/{len(documents)} documents"
+            )
             return success_count > 0
 
         except Exception as e:
             logger.error(f"Error upserting documents: {e}")
             return False
 
-    async def search_similar(self, query: str, top_k: int = 10,
-                           filter_metadata: Optional[Dict[str, Any]] = None) -> List[SearchResult]:
+    async def search_similar(
+        self,
+        query: str,
+        top_k: int = 10,
+        filter_metadata: Optional[Dict[str, Any]] = None,
+    ) -> List[SearchResult]:
         """Search for similar documents using query embedding"""
         try:
             if not self.index:
@@ -173,7 +184,7 @@ class VectorService:
                 vector=query_embedding,
                 top_k=top_k,
                 include_metadata=True,
-                filter=filter_metadata
+                filter=filter_metadata,
             )
 
             # Parse results
@@ -183,19 +194,28 @@ class VectorService:
                     id=match.id,
                     score=match.score,
                     metadata=match.metadata,
-                    content=match.metadata.get('text', match.metadata.get('content', ''))
+                    content=match.metadata.get(
+                        "text", match.metadata.get("content", "")
+                    ),
                 )
                 results.append(result)
 
-            logger.info(f"Found {len(results)} similar documents for query: {query[:50]}...")
+            logger.info(
+                f"Found {len(results)} similar documents for query: {query[:50]}..."
+            )
             return results
 
         except Exception as e:
             logger.error(f"Error searching similar documents: {e}")
             return []
 
-    async def search_innovations(self, query: str, innovation_type: Optional[str] = None,
-                               country: Optional[str] = None, top_k: int = 20) -> List[SearchResult]:
+    async def search_innovations(
+        self,
+        query: str,
+        innovation_type: Optional[str] = None,
+        country: Optional[str] = None,
+        top_k: int = 20,
+    ) -> List[SearchResult]:
         """Search for innovations with filters"""
         filter_dict = {"document_type": "innovation"}
 
@@ -207,8 +227,13 @@ class VectorService:
 
         return await self.search_similar(query, top_k, filter_dict)
 
-    async def search_publications(self, query: str, publication_type: Optional[str] = None,
-                                year_from: Optional[int] = None, top_k: int = 20) -> List[SearchResult]:
+    async def search_publications(
+        self,
+        query: str,
+        publication_type: Optional[str] = None,
+        year_from: Optional[int] = None,
+        top_k: int = 20,
+    ) -> List[SearchResult]:
         """Search for publications with filters"""
         filter_dict = {"document_type": "publication"}
 
@@ -220,9 +245,15 @@ class VectorService:
 
         return await self.search_similar(query, top_k, filter_dict)
 
-    async def add_innovation(self, innovation_id: UUID, title: str, description: str,
-                           innovation_type: str, country: str,
-                           additional_metadata: Optional[Dict[str, Any]] = None) -> bool:
+    async def add_innovation(
+        self,
+        innovation_id: UUID,
+        title: str,
+        description: str,
+        innovation_type: str,
+        country: str,
+        additional_metadata: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Add innovation to vector database"""
         combined_text = f"{title}. {description}"
 
@@ -232,24 +263,28 @@ class VectorService:
             "title": title,
             "innovation_type": innovation_type,
             "country": country,
-            "timestamp": str(asyncio.get_event_loop().time())
+            "timestamp": str(asyncio.get_event_loop().time()),
         }
 
         if additional_metadata:
             metadata.update(additional_metadata)
 
         document = VectorDocument(
-            id=f"innovation_{innovation_id}",
-            content=combined_text,
-            metadata=metadata
+            id=f"innovation_{innovation_id}", content=combined_text, metadata=metadata
         )
 
         return await self.upsert_documents([document])
 
-    async def add_publication(self, publication_id: UUID, title: str, abstract: str,
-                            publication_type: str, authors: List[str],
-                            year: Optional[int] = None,
-                            additional_metadata: Optional[Dict[str, Any]] = None) -> bool:
+    async def add_publication(
+        self,
+        publication_id: UUID,
+        title: str,
+        abstract: str,
+        publication_type: str,
+        authors: List[str],
+        year: Optional[int] = None,
+        additional_metadata: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Add publication to vector database"""
         authors_text = ", ".join(authors) if authors else ""
         combined_text = f"{title}. {abstract}. Authors: {authors_text}"
@@ -260,7 +295,7 @@ class VectorService:
             "title": title,
             "publication_type": publication_type,
             "authors": authors,
-            "timestamp": str(asyncio.get_event_loop().time())
+            "timestamp": str(asyncio.get_event_loop().time()),
         }
 
         if year:
@@ -270,16 +305,20 @@ class VectorService:
             metadata.update(additional_metadata)
 
         document = VectorDocument(
-            id=f"publication_{publication_id}",
-            content=combined_text,
-            metadata=metadata
+            id=f"publication_{publication_id}", content=combined_text, metadata=metadata
         )
 
         return await self.upsert_documents([document])
 
-    async def add_news_article(self, article_id: UUID, title: str, content: str,
-                             source: str, relevance_scores: Dict[str, float],
-                             additional_metadata: Optional[Dict[str, Any]] = None) -> bool:
+    async def add_news_article(
+        self,
+        article_id: UUID,
+        title: str,
+        content: str,
+        source: str,
+        relevance_scores: Dict[str, float],
+        additional_metadata: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Add news article to vector database"""
         combined_text = f"{title}. {content[:2000]}"
 
@@ -289,33 +328,44 @@ class VectorService:
             "title": title,
             "source": source,
             "ai_relevance_score": relevance_scores.get("ai_relevance_score", 0.0),
-            "african_relevance_score": relevance_scores.get("african_relevance_score", 0.0),
-            "timestamp": str(asyncio.get_event_loop().time())
+            "african_relevance_score": relevance_scores.get(
+                "african_relevance_score", 0.0
+            ),
+            "timestamp": str(asyncio.get_event_loop().time()),
         }
 
         if additional_metadata:
             metadata.update(additional_metadata)
 
         document = VectorDocument(
-            id=f"article_{article_id}",
-            content=combined_text,
-            metadata=metadata
+            id=f"article_{article_id}", content=combined_text, metadata=metadata
         )
 
         return await self.upsert_documents([document])
 
-    async def find_similar_innovations(self, innovation_id: UUID, top_k: int = 5) -> List[SearchResult]:
+    async def find_similar_innovations(
+        self, innovation_id: UUID, top_k: int = 5
+    ) -> List[SearchResult]:
         """Find innovations similar to a given innovation"""
         try:
             # First, get the innovation's content
             fetch_response = self.index.fetch(ids=[f"innovation_{innovation_id}"])
 
-            if not fetch_response.vectors or f"innovation_{innovation_id}" not in fetch_response.vectors:
-                logger.warning(f"Innovation {innovation_id} not found in vector database")
+            if (
+                not fetch_response.vectors
+                or f"innovation_{innovation_id}" not in fetch_response.vectors
+            ):
+                logger.warning(
+                    f"Innovation {innovation_id} not found in vector database"
+                )
                 return []
 
-            innovation_metadata = fetch_response.vectors[f"innovation_{innovation_id}"].metadata
-            innovation_text = innovation_metadata.get('text', innovation_metadata.get('title', ''))
+            innovation_metadata = fetch_response.vectors[
+                f"innovation_{innovation_id}"
+            ].metadata
+            innovation_text = innovation_metadata.get(
+                "text", innovation_metadata.get("title", "")
+            )
 
             if not innovation_text:
                 logger.warning(f"No text content found for innovation {innovation_id}")
@@ -325,12 +375,13 @@ class VectorService:
             search_results = await self.search_similar(
                 query=innovation_text,
                 top_k=top_k + 1,  # +1 to account for the original
-                filter_metadata={"document_type": "innovation"}
+                filter_metadata={"document_type": "innovation"},
             )
 
             # Filter out the original innovation
             similar_results = [
-                result for result in search_results
+                result
+                for result in search_results
                 if result.id != f"innovation_{innovation_id}"
             ]
 
@@ -351,8 +402,8 @@ class VectorService:
             return {
                 "total_vectors": stats.total_vector_count,
                 "index_fullness": stats.index_fullness,
-                "dimension": getattr(stats, 'dimension', 1024),
-                "namespaces": stats.namespaces
+                "dimension": getattr(stats, "dimension", 1024),
+                "namespaces": stats.namespaces,
             }
 
         except Exception as e:
@@ -396,7 +447,7 @@ if __name__ == "__main__":
             title="AI-Powered Crop Disease Detection",
             description="Mobile app using computer vision to identify crop diseases in Kenya",
             innovation_type="AgriTech",
-            country="Kenya"
+            country="Kenya",
         )
 
         print(f"Document added: {success}")
@@ -406,6 +457,8 @@ if __name__ == "__main__":
         print(f"Search results: {len(results)}")
 
         for result in results:
-            print(f"- {result.metadata.get('title', 'No title')} (score: {result.score:.3f})")
+            print(
+                f"- {result.metadata.get('title', 'No title')} (score: {result.score:.3f})"
+            )
 
     asyncio.run(test_vector_service())
