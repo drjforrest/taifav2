@@ -146,5 +146,5 @@ const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
 
 CardDescription.displayName = "CardDescription";
 
-export default Card;
-export { CardHeader, CardContent, CardTitle, CardDescription };
+export { Card, CardContent, CardDescription, CardHeader, CardTitle };
+

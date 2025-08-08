@@ -9,6 +9,7 @@ from typing import List, Optional
 from uuid import UUID, uuid4
 
 from api.etl_live import router as etl_live_router
+from api.data_completeness import router as data_completeness_router
 from config.settings import settings
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,6 +79,7 @@ from api.data_intelligence import router as data_intelligence_router
 from api.trends import router as trends_router
 
 app.include_router(etl_live_router)
+app.include_router(data_completeness_router)
 app.include_router(analytics_router)
 app.include_router(data_intelligence_router)
 app.include_router(ai_assistant_router)

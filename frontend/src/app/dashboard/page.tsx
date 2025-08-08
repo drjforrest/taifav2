@@ -2,6 +2,7 @@
 
 import RealTimeAnalytics from "@/components/Dashboard/RealTimeAnalytics";
 import PublicationsTable from "@/components/Dashboard/PublicationsTable";
+import DataCompletenessWidget from "@/components/Dashboard/DataCompletenessWidget";
 import {
   ResearchToInnovationPipeline,
   CollaborationHeatMap,
@@ -24,6 +25,7 @@ import {
   FileText,
   Globe,
   Hash,
+  Loader2,
   Play,
   RefreshCw,
   Rss,
@@ -1278,6 +1280,107 @@ export default function DashboardStats() {
                     {(avg_african_relevance * 100).toFixed(1)}%
                   </span>
                   <span>AI Focus: {(avg_ai_relevance * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Data Completeness Section */}
+      <section
+        className="py-16"
+        style={{ backgroundColor: "var(--color-background-section-1)" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <Section1Text as="h2" className="text-3xl font-bold mb-4">
+              Intelligence Enrichment Analysis
+            </Section1Text>
+            <p 
+              className="text-lg max-w-2xl mx-auto"
+              style={{ color: "var(--color-text-section-subheading)" }}
+            >
+              Monitor data completeness and enrichment pipeline performance
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <DataCompletenessWidget />
+            </div>
+            
+            {/* Quick Actions Panel */}
+            <div className="space-y-4">
+              <div 
+                className="p-6 rounded-lg border"
+                style={{
+                  backgroundColor: "var(--color-card)",
+                  borderColor: "var(--color-border)",
+                }}
+              >
+                <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--color-card-foreground)" }}>
+                  Quick Actions
+                </h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleTriggerEnrichment}
+                    disabled={etlLoading}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50"
+                  >
+                    {etlLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Zap className="w-4 h-4" />
+                    )}
+                    Run Intelligence Enrichment
+                  </button>
+                  
+                  <button
+                    onClick={() => window.open('/admin/data-completeness', '_blank')}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors"
+                  >
+                    <Database className="w-4 h-4" />
+                    Detailed Analysis
+                  </button>
+                </div>
+              </div>
+              
+              {/* System Health */}
+              <div 
+                className="p-6 rounded-lg border"
+                style={{
+                  backgroundColor: "var(--color-card)",
+                  borderColor: "var(--color-border)",
+                }}
+              >
+                <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--color-card-foreground)" }}>
+                  System Health
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Database</span>
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-sm">Healthy</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Intelligence Pipeline</span>
+                    <div className="flex items-center gap-1">
+                      {etlStatus?.enrichment_pipeline_active ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-sm">Active</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4 text-red-500" />
+                          <span className="text-sm">Inactive</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
