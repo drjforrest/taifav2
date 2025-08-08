@@ -90,6 +90,9 @@ const DataCompletenessWidget: React.FC = () => {
     gap => gap.severity === 'critical' || gap.severity === 'high'
   ) || [];
 
+  // Check if this is mock data
+  const isMockData = (missingDataMap as any)?._isMockData === true;
+
   return (
     <Card>
       <CardHeader>
@@ -97,6 +100,11 @@ const DataCompletenessWidget: React.FC = () => {
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4" />
             Intelligence Enrichment Status
+            {isMockData && (
+              <Badge variant="secondary" className="ml-2 text-xs bg-orange-100 text-orange-800">
+                DEMO DATA
+              </Badge>
+            )}
           </div>
           <Button
             onClick={refresh}

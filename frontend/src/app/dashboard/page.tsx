@@ -1137,14 +1137,21 @@ export default function DashboardStats() {
               }}
             >
               <h3
-                className="text-lg font-semibold mb-4 flex items-center"
+                className="text-lg font-semibold mb-4 flex items-center justify-between"
                 style={{ color: "var(--color-card-foreground)" }}
               >
-                <Activity
-                  className="h-5 w-5 mr-2"
-                  style={{ color: "var(--color-accent)" }}
-                />
-                Today's Activity
+                <div className="flex items-center">
+                  <Activity
+                    className="h-5 w-5 mr-2"
+                    style={{ color: "var(--color-accent)" }}
+                  />
+                  Today's Activity
+                </div>
+                {(etlStatus as any)?._isMockData && (
+                  <span className="text-xs px-2 py-1 rounded bg-orange-100 text-orange-800">
+                    DEMO DATA
+                  </span>
+                )}
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">

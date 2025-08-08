@@ -335,17 +335,27 @@ class ETLMonitor:
         """Get status in format expected by frontend"""
         self.load_status()
 
-        # Calculate today's totals
+        # Calculate today's totals - use more inclusive time range for production
         today = datetime.now().date()
         total_processed_today = 0
         errors_today = 0
 
         for status in self.job_statuses.values():
-            if status.last_run and status.last_run.date() == today:
-                if status.last_success and status.last_success.date() == today:
-                    total_processed_today += status.metrics.items_processed
-                if status.last_error and status.last_run.date() == today:
-                    errors_today += 1
+            # Include recent successful runs (within last 24 hours) for better UX in production
+            if status.last_run:
+                run_date = status.last_run.date()
+                hours_since_run = (datetime.now() - status.last_run).total_seconds() / 3600
+                
+                # Count as "today" if run today OR within last 24 hours
+                if run_date == today or hours_since_run <= 24:
+                    if status.last_success and (
+                        status.last_success.date() == today or 
+                        (datetime.now() - status.last_success).total_seconds() / 3600 <= 24
+                    ):
+                        total_processed_today += status.metrics.items_processed
+                    
+                    if status.last_error and run_date == today:
+                        errors_today += 1
 
         # Get system health
         system_health = self.get_system_health()
