@@ -14,15 +14,15 @@ import {
   MapPin,
   Building2,
   ArrowUpRight,
-  RefreshCw
+  RefreshCw,
+  Newspaper
 } from 'lucide-react'
 import Link from 'next/link'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 interface ActivityItem {
   id: string
-  type: 'innovation' | 'publication' | 'submission' | 'verification'
+  type: 'innovation' | 'publication' | 'submission' | 'verification' | 'news'
   title: string
   description?: string
   timestamp: string
@@ -36,6 +36,8 @@ interface ActivityItem {
     publication_type?: string
     domain?: string
     funding_amount?: number
+    news_source?: string
+    article_type?: string
   }
 }
 
@@ -53,30 +55,41 @@ export default function RecentActivity() {
   useEffect(() => {
     // Combine all activity types into a single feed
     const combinedActivity: ActivityItem[] = [
-      // Recent innovations
-      ...recentInnovations.map(innovation => ({
-        id: innovation.id,
-        type: 'innovation' as const,
-        title: innovation.title,
-        description: innovation.description,
-        timestamp: innovation.created_at || innovation.creation_date,
-        country: innovation.country,
-        organization: innovation.organizations?.[0]?.name,
-        metadata: {
-          innovation_type: innovation.innovation_type,
-          verification_status: innovation.verification_status
-        }
-      })),
+      // Recent innovations (which may include news items from ETL)
+      ...recentInnovations.map(innovation => {
+        // Handle news items that come through the innovations array
+        const isNewsItem = innovation.type === 'news' || innovation.news_source;
+        
+        return {
+          id: innovation.id,
+          type: isNewsItem ? 'news' as const : 'innovation' as const,
+          title: innovation.title,
+          description: innovation.description || innovation.abstract,
+          timestamp: innovation.created_at || innovation.creation_date || innovation.published_date,
+          country: innovation.country,
+          organization: innovation.organizations?.[0]?.name || innovation.source,
+          url: innovation.url || innovation.link,
+          metadata: {
+            innovation_type: innovation.innovation_type,
+            verification_status: innovation.verification_status,
+            news_source: innovation.news_source || innovation.source,
+            article_type: innovation.article_type
+          }
+        };
+      }),
       // Recent publications
       ...recentPublications.map(publication => ({
         id: publication.id,
         type: 'publication' as const,
         title: publication.title,
+        description: publication.abstract,
         timestamp: publication.created_at || publication.publication_date,
+        country: publication.country,
+        organization: publication.journal || publication.source,
         url: publication.url || publication.source,
         metadata: {
           publication_type: publication.publication_type,
-          domain: publication.domain
+          domain: publication.domain || publication.project_domain
         }
       }))
     ]
@@ -101,6 +114,8 @@ export default function RecentActivity() {
         return <Lightbulb className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
       case 'publication':
         return <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+      case 'news':
+        return <Newspaper className="h-5 w-5 text-orange-600 dark:text-orange-400" />
       case 'submission':
         return <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
       case 'verification':
@@ -257,6 +272,18 @@ export default function RecentActivity() {
                           {item.metadata?.publication_type && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
                               {item.metadata.publication_type}
+                            </span>
+                          )}
+                          
+                          {item.metadata?.news_source && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+                              {item.metadata.news_source}
+                            </span>
+                          )}
+                          
+                          {item.metadata?.article_type && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                              {item.metadata.article_type}
                             </span>
                           )}
                         </div>

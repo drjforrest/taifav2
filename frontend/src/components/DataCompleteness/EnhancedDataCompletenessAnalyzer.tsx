@@ -82,49 +82,57 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Records</p>
-                  <p className="text-2xl font-bold">{analysisData.total_records}</p>
+                <div className="flex flex-col justify-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Records</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{analysisData.total_records}</p>
                 </div>
-                <Database className="w-8 h-8 text-blue-500" />
+                <div className="flex items-center justify-center">
+                  <Database className="w-8 h-8 text-blue-500" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Avg Completeness</p>
-                  <p className="text-2xl font-bold">{avgCompleteness.toFixed(1)}%</p>
+                <div className="flex flex-col justify-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Avg Completeness</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{avgCompleteness.toFixed(1)}%</p>
                 </div>
-                <BarChart3 className="w-8 h-8 text-green-500" />
+                <div className="flex items-center justify-center">
+                  <BarChart3 className="w-8 h-8 text-green-500" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Avg Missing Fields</p>
-                  <p className="text-2xl font-bold">{avgMissingFields.toFixed(1)}</p>
+                <div className="flex flex-col justify-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Avg Missing Fields</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{avgMissingFields.toFixed(1)}</p>
                 </div>
-                <AlertCircle className="w-8 h-8 text-orange-500" />
+                <div className="flex items-center justify-center">
+                  <AlertCircle className="w-8 h-8 text-orange-500" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Fields</p>
-                  <p className="text-2xl font-bold">{schema_info.total_fields}</p>
+                <div className="flex flex-col justify-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Fields</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{schema_info.total_fields}</p>
                 </div>
-                <Filter className="w-8 h-8 text-purple-500" />
+                <div className="flex items-center justify-center">
+                  <Filter className="w-8 h-8 text-purple-500" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -138,14 +146,14 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h4 className="font-medium mb-2">Core Fields</h4>
+                <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Core Fields</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {schema_info.core_fields.map((field: string) => {
                     const missingCount = record_analysis.filter((r: any) => r.missing_fields.includes(field)).length;
                     const completeness = ((record_analysis.length - missingCount) / record_analysis.length) * 100;
                     return (
-                      <div key={field} className="p-2 border rounded">
-                        <div className="text-xs font-mono mb-1">{field}</div>
+                      <div key={field} className="p-2 border border-gray-200 dark:border-gray-600 rounded">
+                        <div className="text-xs font-mono mb-1 text-gray-700 dark:text-gray-300">{field}</div>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 bg-gray-200 rounded-full h-2">
                             <div
@@ -157,7 +165,7 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
                               style={{ width: `${completeness}%` }}
                             />
                           </div>
-                          <span className="text-xs">{completeness.toFixed(0)}%</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">{completeness.toFixed(0)}%</span>
                         </div>
                       </div>
                     );
@@ -166,14 +174,14 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
               </div>
 
               <div>
-                <h4 className="font-medium mb-2">Enrichment Fields</h4>
+                <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Enrichment Fields</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {schema_info.enrichment_fields.map((field: string) => {
                     const missingCount = record_analysis.filter((r: any) => r.missing_fields.includes(field)).length;
                     const completeness = ((record_analysis.length - missingCount) / record_analysis.length) * 100;
                     return (
-                      <div key={field} className="p-2 border rounded">
-                        <div className="text-xs font-mono mb-1">{field}</div>
+                      <div key={field} className="p-2 border border-gray-200 dark:border-gray-600 rounded">
+                        <div className="text-xs font-mono mb-1 text-gray-700 dark:text-gray-300">{field}</div>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 bg-gray-200 rounded-full h-2">
                             <div
@@ -185,7 +193,7 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
                               style={{ width: `${completeness}%` }}
                             />
                           </div>
-                          <span className="text-xs">{completeness.toFixed(0)}%</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">{completeness.toFixed(0)}%</span>
                         </div>
                       </div>
                     );
@@ -218,19 +226,19 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
             <CardContent>
               <div className="space-y-3">
                 {pattern_analysis.systematic_issues.issues.map((issue: any, idx: number) => (
-                  <div key={idx} className={`p-3 border rounded ${getSeverityColor(issue.severity)}`}>
+                  <div key={idx} className={`p-3 border border-gray-200 dark:border-gray-600 rounded ${getSeverityColor(issue.severity)}`}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         {getSeverityIcon(issue.severity)}
-                        <span className="font-medium">{issue.field}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{issue.field}</span>
                         <Badge variant={issue.severity === 'critical' ? 'destructive' : 'secondary'}>
                           {issue.severity}
                         </Badge>
                       </div>
                       <span className="text-sm font-mono">{issue.missing_percentage.toFixed(1)}%</span>
                     </div>
-                    <p className="text-sm mb-1">{issue.description}</p>
-                    <p className="text-xs text-gray-600 italic">{issue.likely_cause}</p>
+                    <p className="text-sm mb-1 text-gray-700 dark:text-gray-300">{issue.description}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 italic">{issue.likely_cause}</p>
                   </div>
                 ))}
               </div>
@@ -250,19 +258,19 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
             <CardContent>
               <div className="space-y-3">
                 {pattern_analysis.field_correlations.strong_correlations.map((corr: any, idx: number) => (
-                  <div key={idx} className="p-3 border rounded">
+                  <div key={idx} className="p-3 border border-gray-200 dark:border-gray-600 rounded">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm">{corr.field1}</span>
-                        <span className="text-gray-400">↔</span>
-                        <span className="font-mono text-sm">{corr.field2}</span>
+                        <span className="font-mono text-sm text-gray-700 dark:text-gray-300">{corr.field1}</span>
+                        <span className="text-gray-400 dark:text-gray-500">↔</span>
+                        <span className="font-mono text-sm text-gray-700 dark:text-gray-300">{corr.field2}</span>
                         {corr.likely_systematic && (
                           <Badge variant="destructive" className="text-xs">Systematic</Badge>
                         )}
                       </div>
                       <span className="text-sm font-bold">{(corr.correlation_strength * 100).toFixed(1)}%</span>
                     </div>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       Missing together in {corr.co_missing_count} records
                     </p>
                   </div>
@@ -281,10 +289,10 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
             <CardContent>
               <div className="space-y-3">
                 {pattern_analysis.missing_clusters.common_patterns.map((pattern: any, idx: number) => (
-                  <div key={idx} className="p-3 border rounded">
+                  <div key={idx} className="p-3 border border-gray-200 dark:border-gray-600 rounded">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{pattern.record_count} records</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{pattern.record_count} records</span>
                         {pattern.likely_systematic && (
                           <Badge variant="destructive" className="text-xs">Systematic</Badge>
                         )}
@@ -317,9 +325,9 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
             <CardContent>
               <div className="space-y-2">
                 {pattern_analysis.temporal_patterns.patterns.map((period: any, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between p-2 border rounded">
-                    <span className="font-mono text-sm">{period.period}</span>
-                    <div className="flex items-center gap-4 text-sm">
+                  <div key={idx} className="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-600 rounded">
+                    <span className="font-mono text-sm text-gray-700 dark:text-gray-300">{period.period}</span>
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                       <span>{period.total_records} records</span>
                       <span>{period.avg_missing_fields.toFixed(1)} avg missing</span>
                       {period.most_missing_field && (
@@ -346,18 +354,18 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Individual Record Analysis</h3>
-          <span className="text-sm text-gray-600">{record_analysis.length} records</span>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Individual Record Analysis</h3>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{record_analysis.length} records</span>
         </div>
 
         <div className="grid gap-3 max-h-96 overflow-y-auto">
-          {record_analysis.slice(0, 50).map((record: any, idx: number) => (
+          {record_analysis.slice(0, 50).map((record: any) => (
             <div
               key={record.record_id}
-              className={`p-3 border rounded cursor-pointer transition-colors ${
+              className={`p-3 border border-gray-200 dark:border-gray-600 rounded cursor-pointer transition-colors ${
                 selectedRecord?.record_id === record.record_id 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'hover:bg-gray-50'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
               onClick={() => setSelectedRecord(record)}
             >
@@ -481,13 +489,13 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Most Problematic Records</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Most Problematic Records</h3>
           <div className="flex items-center gap-2">
-            <label className="text-sm">Min missing fields:</label>
+            <label className="text-sm text-gray-600 dark:text-gray-400">Min missing fields:</label>
             <select
               value={minMissingFields}
               onChange={(e) => setMinMissingFields(Number(e.target.value))}
-              className="border rounded px-2 py-1 text-sm"
+              className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value={1}>1+</option>
               <option value={3}>3+</option>
@@ -499,43 +507,43 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400 mb-1">
                   {problematicRecords.summary.total_problematic}
                 </div>
-                <div className="text-sm text-gray-600">Problematic Records</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Problematic Records</div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1">
                   {problematicRecords.summary.percentage_problematic.toFixed(1)}%
                 </div>
-                <div className="text-sm text-gray-600">Of Total Records</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Of Total Records</div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">
+                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">
                   {problematicRecords.summary.avg_missing_fields.toFixed(1)}
                 </div>
-                <div className="text-sm text-gray-600">Avg Missing Fields</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Avg Missing Fields</div>
               </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="space-y-3 max-h-96 overflow-y-auto">
-          {problematicRecords.problematic_records.map((record: any, idx: number) => (
-            <div key={record.record_id} className="p-4 border rounded">
+          {problematicRecords.problematic_records.map((record: any) => (
+            <div key={record.record_id} className="p-4 border border-gray-200 dark:border-gray-600 rounded">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm">#{record.record_id}</span>
+                  <span className="font-mono text-sm text-gray-700 dark:text-gray-300">#{record.record_id}</span>
                   <Badge variant="destructive">
                     {record.missing_fields_count} missing ({record.missing_percentage.toFixed(1)}%)
                   </Badge>
@@ -590,16 +598,16 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
-        <span>Loading enhanced data completeness analysis...</span>
+        <span className="text-gray-600 dark:text-gray-400">Loading enhanced data completeness analysis...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <Alert className="border-red-200 bg-red-50">
-        <AlertCircle className="h-4 w-4 text-red-500" />
-        <AlertDescription className="text-red-700">
+      <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+        <AlertCircle className="h-4 w-4 text-red-500 dark:text-red-400" />
+        <AlertDescription className="text-red-700 dark:text-red-300">
           Error: {error}
         </AlertDescription>
       </Alert>
@@ -612,7 +620,7 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Enhanced Data Completeness Analysis</h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Detailed record-level analysis with pattern detection for missing data
           </p>
         </div>

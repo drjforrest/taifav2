@@ -7,7 +7,7 @@ import {
   TechnologyAdoptionCurves
 } from "@/components/Dashboard/DataInsights";
 import DataValidationPanel from "@/components/Dashboard/DataValidationPanel";
-import PublicationsTable from "@/components/Dashboard/PublicationsTable";
+import RecentDiscoveries from "@/components/Dashboard/RecentDiscoveries";
 import RealTimeAnalytics from "@/components/Dashboard/RealTimeAnalytics";
 import {
   Section1Text,
@@ -61,7 +61,6 @@ export default function DashboardStats() {
 
   const {
     status: etlStatus,
-    health: etlHealth,
     triggerAcademicPipeline,
     triggerNewsPipeline,
     triggerSerperSearch,
@@ -1497,16 +1496,16 @@ export default function DashboardStats() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
               <Section3Text as="h2" className="text-3xl font-bold mb-4">
-                Research Publications Feed
+                Recent Discoveries Feed
               </Section3Text>
               <p 
                 className="text-lg max-w-2xl mx-auto opacity-70"
                 style={{ color: "var(--color-text-section-subheading)" }}
               >
-                Live feed of African AI research publications and academic papers
+                Live feed of new publications, news articles, and community contributions
               </p>
             </div>
-            <PublicationsTable />
+            <RecentDiscoveries />
           </div>
         </section>
       )}

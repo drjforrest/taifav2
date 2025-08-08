@@ -20,7 +20,7 @@ const DataCompletenessWidget: React.FC = () => {
     
     return (
       <div className="space-y-1">
-        <div className="text-xs font-medium text-gray-600 mb-1">
+        <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
           Data Matrix ({records.length}×{fields.length})
         </div>
         <div className="space-y-0.5">
@@ -31,8 +31,8 @@ const DataCompletenessWidget: React.FC = () => {
                   key={`${recordIdx}-${field}`}
                   className={`w-2 h-2 rounded-sm ${
                     record[field] 
-                      ? 'bg-green-400' 
-                      : 'bg-red-300'
+                      ? 'bg-green-500 dark:bg-green-400' 
+                      : 'bg-red-400 dark:bg-red-500'
                   }`}
                   title={`${field}: ${record[field] ? 'Present' : 'Missing'}`}
                 />
@@ -56,7 +56,7 @@ const DataCompletenessWidget: React.FC = () => {
         <CardContent>
           <div className="flex items-center justify-center h-32">
             <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            <span className="text-sm">Loading analysis...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">Loading analysis...</span>
           </div>
         </CardContent>
       </Card>
@@ -73,9 +73,9 @@ const DataCompletenessWidget: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert className="border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-500" />
-            <AlertDescription className="text-red-700 text-sm">
+          <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+            <AlertCircle className="h-4 w-4 text-red-500 dark:text-red-400" />
+            <AlertDescription className="text-red-700 dark:text-red-300 text-sm">
               {error}
             </AlertDescription>
           </Alert>
@@ -101,7 +101,7 @@ const DataCompletenessWidget: React.FC = () => {
             <Database className="w-4 h-4" />
             Intelligence Enrichment Status
             {isMockData && (
-              <Badge variant="secondary" className="ml-2 text-xs bg-orange-100 text-orange-800">
+              <Badge variant="secondary" className="ml-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
                 DEMO DATA
               </Badge>
             )}
@@ -123,9 +123,9 @@ const DataCompletenessWidget: React.FC = () => {
       <CardContent className="space-y-4">
         {/* Critical Status Alert */}
         {!missingDataMap.summary.intelligence_table_exists && (
-          <Alert className="border-red-200 bg-red-50">
-            <XCircle className="h-4 w-4 text-red-500" />
-            <AlertDescription className="text-red-700 text-sm">
+          <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+            <XCircle className="h-4 w-4 text-red-500 dark:text-red-400" />
+            <AlertDescription className="text-red-700 dark:text-red-300 text-sm">
               Intelligence pipeline inactive - no reports generated
             </AlertDescription>
           </Alert>
@@ -134,12 +134,12 @@ const DataCompletenessWidget: React.FC = () => {
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3">
           {Object.entries(missingDataMap.missing_data_map).map(([tableName, tableData]) => (
-            <div key={tableName} className="text-center p-2 bg-gray-50 rounded">
-              <div className={`text-lg font-bold ${getCompletenessTextColor(tableData.enrichment_fields_completeness)}`}>
+            <div key={tableName} className="text-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+              <div className="text-lg font-bold text-gray-900 dark:text-white">
                 {tableData.enrichment_fields_completeness.toFixed(0)}%
               </div>
-              <div className="text-xs text-gray-600">{tableName}</div>
-              <div className="text-xs text-gray-500">{tableData.total_records} records</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">{tableName}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{tableData.total_records} records</div>
             </div>
           ))}
         </div>
@@ -147,19 +147,19 @@ const DataCompletenessWidget: React.FC = () => {
         {/* Critical Issues Summary */}
         {criticalIssues.length > 0 && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-red-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400">
               <AlertCircle className="w-4 h-4" />
               {criticalIssues.length} Critical Issues
             </div>
             <div className="space-y-1">
               {criticalIssues.slice(0, 2).map((issue, idx) => (
-                <div key={idx} className="text-xs p-2 bg-red-50 rounded border-l-2 border-red-200">
-                  <div className="font-medium text-red-800">{issue.type.replace('_', ' ')}</div>
-                  <div className="text-red-600">{issue.description}</div>
+                <div key={idx} className="text-xs p-2 bg-red-50 dark:bg-red-900/20 rounded border-l-2 border-red-200 dark:border-red-800">
+                  <div className="font-medium text-red-800 dark:text-red-300">{issue.type.replace('_', ' ')}</div>
+                  <div className="text-red-600 dark:text-red-400">{issue.description}</div>
                 </div>
               ))}
               {criticalIssues.length > 2 && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   +{criticalIssues.length - 2} more issues
                 </div>
               )}
@@ -185,15 +185,15 @@ const DataCompletenessWidget: React.FC = () => {
                 {Object.entries(missingDataMap.missing_data_map).map(([tableName, tableData]) => (
                   <div key={tableName} className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{tableName}</span>
-                      <Badge variant="outline" className="text-xs">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{tableName}</span>
+                      <Badge variant="outline" className="text-xs text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600">
                         {tableData.overall_completeness.toFixed(1)}% complete
                       </Badge>
                     </div>
                     {tableData.total_records > 0 ? (
                       renderMiniDotMatrix(tableData)
                     ) : (
-                      <div className="text-xs text-gray-500 italic">No data available</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 italic">No data available</div>
                     )}
                   </div>
                 ))}
@@ -202,10 +202,10 @@ const DataCompletenessWidget: React.FC = () => {
               {/* Top Recommendations */}
               {missingDataMap.recommendations.length > 0 && (
                 <div className="space-y-2">
-                  <div className="text-sm font-medium">Top Recommendations</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">Top Recommendations</div>
                   <div className="space-y-1">
                     {missingDataMap.recommendations.slice(0, 3).map((rec, idx) => (
-                      <div key={idx} className="text-xs p-2 bg-blue-50 rounded">
+                      <div key={idx} className="text-xs p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-blue-800 dark:text-blue-300">
                         {rec.replace(/^🔴|🟡|🟠|✅\s*/, '')}
                       </div>
                     ))}
@@ -217,7 +217,7 @@ const DataCompletenessWidget: React.FC = () => {
         </div>
 
         {/* Analysis Timestamp */}
-        <div className="text-xs text-gray-400 text-right">
+        <div className="text-xs text-gray-400 dark:text-gray-500 text-right">
           Updated: {new Date(missingDataMap.analysis_timestamp).toLocaleTimeString()}
         </div>
       </CardContent>

@@ -104,21 +104,39 @@ export function useRecentActivity() {
       try {
         activityData = await apiClient.get<RecentActivity>(API_ENDPOINTS.recentActivity);
       } catch (recentActivityError) {
-        console.warn("Recent activity endpoint not available, trying analytics endpoints");
+        console.warn("Recent activity endpoint not available, trying ETL recent and analytics endpoints");
         
-        // Fallback to analytics endpoints
-        const [innovationsResponse, publicationsResponse] = await Promise.allSettled([
+        // Try to fetch from ETL recent endpoint and analytics endpoints
+        const [etlRecentResponse, innovationsResponse, publicationsResponse] = await Promise.allSettled([
+          apiClient.get(API_ENDPOINTS.etl.recent),
           apiClient.get(API_ENDPOINTS.analytics.innovations),
           apiClient.get(API_ENDPOINTS.analytics.publications)
         ]);
 
-        const recentInnovations = innovationsResponse.status === 'fulfilled'
-          ? (innovationsResponse.value as any)?.recent_innovations?.slice(0, 5) || []
-          : [];
+        let recentInnovations = [];
+        let recentPublications = [];
         
-        const recentPublications = publicationsResponse.status === 'fulfilled'
-          ? (publicationsResponse.value as any)?.recent_publications?.slice(0, 5) || []
-          : [];
+        // Process ETL recent activity if available
+        if (etlRecentResponse.status === 'fulfilled') {
+          const etlActivity = (etlRecentResponse.value as any)?.activity || [];
+          
+          // Separate innovations and publications from ETL activity
+          recentInnovations = etlActivity
+            .filter((item: any) => item.type === 'innovation' || item.type === 'news')
+            .slice(0, 5);
+          recentPublications = etlActivity
+            .filter((item: any) => item.type === 'publication')
+            .slice(0, 5);
+        }
+        
+        // Fallback to analytics endpoints if we don't have enough data
+        if (recentInnovations.length === 0 && innovationsResponse.status === 'fulfilled') {
+          recentInnovations = (innovationsResponse.value as any)?.recent_innovations?.slice(0, 5) || [];
+        }
+        
+        if (recentPublications.length === 0 && publicationsResponse.status === 'fulfilled') {
+          recentPublications = (publicationsResponse.value as any)?.recent_publications?.slice(0, 5) || [];
+        }
 
         activityData = {
           recentPublications,
