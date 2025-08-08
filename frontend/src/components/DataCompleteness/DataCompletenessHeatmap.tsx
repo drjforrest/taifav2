@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ui/Button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, RefreshCw, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
@@ -382,7 +382,7 @@ const DataCompletenessHeatmap: React.FC = () => {
             {Object.keys(missingDataMap.missing_data_map).map((tableName) => (
               <Button
                 key={tableName}
-                variant={selectedTable === tableName ? 'default' : 'outline'}
+                variant={selectedTable === tableName ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedTable(tableName)}
               >
