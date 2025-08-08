@@ -17,7 +17,7 @@ import aiohttp
 from loguru import logger
 
 from services.citation_extractor import CitationExtractor
-from database.connection import get_db_connection
+from config.database import get_supabase
 from services.null_result_cache import (
     check_web_scraping_cache, cache_null_web_scraping, CacheReason, DataSource
 )
@@ -55,8 +55,8 @@ class SnowballSampler:
     
     def __init__(self, config: SamplingConfig = None):
         self.config = config or SamplingConfig()
-        self.db = get_db_connection()
-        self.citation_extractor = CitationExtractor(self.db)
+        self.supabase = get_supabase()
+        self.citation_extractor = CitationExtractor(self.supabase)
         self.processed_urls: Set[str] = set()
         self.sampling_session_id = f"snowball_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
@@ -323,24 +323,25 @@ class SnowballSampler:
         """Store snowball sampling session results"""
         
         try:
-            query = """
-            INSERT INTO snowball_sessions 
-            (session_id, start_time, end_time, duration, citations_processed, 
-             new_discoveries, failed_extractions, depth_reached, session_data)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
+            # Store in Supabase instead of raw SQL
+            data = {
+                'session_id': session_stats['session_id'],
+                'start_time': session_stats['start_time'].isoformat(),
+                'end_time': session_stats.get('end_time').isoformat() if session_stats.get('end_time') else None,
+                'duration': session_stats.get('duration', 0),
+                'citations_processed': session_stats['citations_processed'],
+                'new_discoveries': session_stats['new_discoveries'],
+                'failed_extractions': session_stats['failed_extractions'],
+                'depth_reached': session_stats['depth_reached'],
+                'session_data': session_stats
+            }
             
-            await self.db.execute(query, (
-                session_stats['session_id'],
-                session_stats['start_time'],
-                session_stats.get('end_time'),
-                session_stats.get('duration', 0),
-                session_stats['citations_processed'],
-                session_stats['new_discoveries'],
-                session_stats['failed_extractions'],
-                session_stats['depth_reached'],
-                json.dumps(session_stats, default=str)
-            ))
+            response = self.supabase.table('snowball_sessions').insert(data).execute()
+            
+            if response.data:
+                logger.info(f"Stored snowball session results: {session_stats['session_id']}")
+            else:
+                logger.warning(f"Failed to store session results - no data returned")
             
         except Exception as e:
             logger.error(f"Failed to store session results: {e}")

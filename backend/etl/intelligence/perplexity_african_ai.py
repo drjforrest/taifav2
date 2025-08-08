@@ -505,11 +505,283 @@ class PerplexityAfricanAIModule:
         ]
 
         return recommendations
-
+    
+    async def _extract_structured_findings(self, content: str, intel_type: IntelligenceType) -> List[Dict[str, Any]]:
+        """Extract structured findings from content"""
+        findings = []
+        
+        # Split content into paragraphs for analysis
+        paragraphs = [p.strip() for p in content.split('\n\n') if p.strip()]
+        
+        for paragraph in paragraphs:
+            if len(paragraph) > 50:  # Skip very short paragraphs
+                finding = {
+                    'type': intel_type.value,
+                    'content': paragraph,
+                    'extracted_at': datetime.now().isoformat()
+                }
+                
+                # Extract entities based on intelligence type
+                if intel_type == IntelligenceType.INNOVATION_DISCOVERY:
+                    finding.update(self._extract_innovation_entities(paragraph))
+                elif intel_type == IntelligenceType.FUNDING_LANDSCAPE:
+                    finding.update(self._extract_funding_entities(paragraph))
+                elif intel_type == IntelligenceType.RESEARCH_BREAKTHROUGH:
+                    finding.update(self._extract_research_entities(paragraph))
+                
+                findings.append(finding)
+        
+        return findings
+    
+    def _generate_summary(self, content: str, intel_type: IntelligenceType) -> str:
+        """Generate summary from content"""
+        # Simple extractive summary - take first few sentences
+        sentences = content.split('. ')
+        if len(sentences) > 3:
+            summary = '. '.join(sentences[:3]) + '.'
+        else:
+            summary = content[:200] + '...' if len(content) > 200 else content
+        
+        return summary.strip()
+    
+    def _extract_key_findings(self, content: str) -> List[str]:
+        """Extract key findings from content"""
+        findings = []
+        
+        # Look for numbered lists or bullet points
+        lines = content.split('\n')
+        for line in lines:
+            line = line.strip()
+            if (line.startswith(('1.', '2.', '3.', '•', '-', '*')) and 
+                len(line) > 10 and len(line) < 200):
+                # Clean up the finding
+                clean_finding = line.lstrip('123456789.•-* ').strip()
+                if clean_finding:
+                    findings.append(clean_finding)
+        
+        # If no structured findings, extract important sentences
+        if not findings:
+            import re
+            sentences = re.split(r'[.!?]+', content)
+            for sentence in sentences[:5]:  # Take first 5 sentences
+                sentence = sentence.strip()
+                if (len(sentence) > 20 and len(sentence) < 200 and
+                    any(keyword in sentence.lower() for keyword in ['ai', 'innovation', 'startup', 'funding', 'research'])):
+                    findings.append(sentence)
+        
+        return findings[:10]  # Limit to 10 findings
+    
+    def _extract_innovations(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Extract innovation mentions from findings"""
+        innovations = []
+        
+        for finding in findings:
+            if finding.get('type') in ['innovation_discovery', 'startup_mention']:
+                innovation = {
+                    'company_name': finding.get('company_name', ''),
+                    'description': finding.get('content', '')[:200],
+                    'location': finding.get('location', ''),
+                    'confidence': finding.get('confidence_score', 0.7)
+                }
+                
+                # Only add if we have a company name
+                if innovation['company_name']:
+                    innovations.append(innovation)
+        
+        return innovations
+    
+    def _extract_funding_updates(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Extract funding updates from findings"""
+        funding_updates = []
+        
+        for finding in findings:
+            if finding.get('type') == 'funding_landscape' or finding.get('funding_amount'):
+                update = {
+                    'company': finding.get('company_name', ''),
+                    'amount': finding.get('funding_amount', ''),
+                    'investors': finding.get('investors', []),
+                    'round_type': finding.get('round_type', ''),
+                    'description': finding.get('content', '')[:200]
+                }
+                
+                # Only add if we have funding information
+                if update['amount'] or update['investors']:
+                    funding_updates.append(update)
+        
+        return funding_updates
+    
+    def _extract_policy_developments(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Extract policy developments from findings"""
+        policy_developments = []
+        
+        for finding in findings:
+            if (finding.get('type') == 'policy_development' or 
+                any(keyword in finding.get('content', '').lower() 
+                    for keyword in ['policy', 'regulation', 'government', 'law'])):
+                
+                development = {
+                    'title': finding.get('policy_title', ''),
+                    'description': finding.get('content', '')[:200],
+                    'country': finding.get('country', ''),
+                    'type': finding.get('policy_type', 'regulation')
+                }
+                
+                policy_developments.append(development)
+        
+        return policy_developments
+    
+    def _extract_sources(self, content: str) -> List[str]:
+        """Extract source URLs from content"""
+        import re
+        
+        # Look for URLs in the content
+        url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'  
+        urls = re.findall(url_pattern, content)
+        
+        # Clean and deduplicate
+        clean_urls = []
+        for url in urls:
+            # Remove trailing punctuation
+            url = url.rstrip('.,;:!?")')
+            if url not in clean_urls and len(url) > 10:
+                clean_urls.append(url)
+        
+        return clean_urls[:20]  # Limit to 20 sources
+    
+    def _extract_innovation_entities(self, text: str) -> Dict[str, Any]:
+        """Extract innovation-specific entities from text"""
+        import re
+        
+        entities = {}
+        
+        # Look for company names (capitalized words)
+        company_pattern = r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b'
+        potential_companies = re.findall(company_pattern, text)
+        
+        # Filter for likely company names (basic heuristic)
+        for company in potential_companies:
+            if (len(company.split()) <= 3 and 
+                any(keyword in text.lower() for keyword in ['startup', 'company', 'founded', 'launched'])):
+                entities['company_name'] = company
+                break
+        
+        # Look for locations
+        african_countries = ['Nigeria', 'Kenya', 'South Africa', 'Ghana', 'Egypt', 
+                           'Morocco', 'Rwanda', 'Uganda', 'Tanzania', 'Senegal']
+        for country in african_countries:
+            if country in text:
+                entities['location'] = country
+                break
+        
+        return entities
+    
+    def _extract_funding_entities(self, text: str) -> Dict[str, Any]:
+        """Extract funding-specific entities from text"""
+        import re
+        
+        entities = {}
+        
+        # Look for funding amounts
+        funding_pattern = r'\$([\d,]+(?:\.\d+)?)\s*(million|billion|M|B)'
+        funding_match = re.search(funding_pattern, text, re.IGNORECASE)
+        
+        if funding_match:
+            entities['funding_amount'] = funding_match.group(0)
+        
+        # Look for round types
+        round_pattern = r'(seed|series [A-Z]|pre-seed|bridge|debt)\s+(?:funding|round)'
+        round_match = re.search(round_pattern, text, re.IGNORECASE)
+        
+        if round_match:
+            entities['round_type'] = round_match.group(1)
+        
+        # Look for investors
+        if 'investor' in text.lower():
+            # Simple extraction - could be improved
+            entities['investors'] = ['Investment firm mentioned']
+        
+        return entities
+    
+    def _extract_research_entities(self, text: str) -> Dict[str, Any]:
+        """Extract research-specific entities from text"""
+        entities = {}
+        
+        # Look for universities
+        if 'university' in text.lower():
+            import re
+            uni_pattern = r'University of [A-Z][a-z]+'
+            uni_match = re.search(uni_pattern, text)
+            if uni_match:
+                entities['institution'] = uni_match.group(0)
+        
+        # Look for research topics
+        research_keywords = ['machine learning', 'artificial intelligence', 'deep learning', 
+                           'computer vision', 'nlp', 'robotics']
+        for keyword in research_keywords:
+            if keyword in text.lower():
+                entities['research_area'] = keyword
+                break
+        
+        return entities
+    
+    def _calculate_confidence_score(self, content: str, findings: List[Dict[str, Any]]) -> float:
+        """Calculate confidence score for intelligence report"""
+        base_score = 0.5
+        
+        # Boost score for content length (more content = higher confidence)
+        if len(content) > 1000:
+            base_score += 0.1
+        elif len(content) > 500:
+            base_score += 0.05
+        
+        # Boost score for structured findings
+        if len(findings) > 3:
+            base_score += 0.15
+        elif len(findings) > 1:
+            base_score += 0.1
+        
+        # Boost score for specific entity mentions
+        entity_types = set()
+        for finding in findings:
+            if finding.get('company_name'):
+                entity_types.add('company')
+            if finding.get('funding_amount'):
+                entity_types.add('funding')
+            if finding.get('location'):
+                entity_types.add('location')
+        
+        base_score += len(entity_types) * 0.05
+        
+        # Boost score for URLs/sources
+        url_count = content.lower().count('http')
+        if url_count > 0:
+            base_score += min(0.1, url_count * 0.02)
+        
+        return min(1.0, base_score)
+    
+    def _extract_emerging_themes(self, reports: List[IntelligenceReport]) -> List[str]:
+        """Extract emerging themes from multiple reports"""
+        themes = []
+        
+        # Combine all key findings
+        all_findings = []
+        for report in reports:
+            all_findings.extend(report.key_findings)
+        
+        # Simple theme extraction - look for common keywords
+        theme_keywords = ['blockchain', 'fintech', 'healthtech', 'agritech', 
+                         'edtech', 'climate', 'sustainability', 'mobile', 'payments']
+        
+        for keyword in theme_keywords:
+            if any(keyword in finding.lower() for finding in all_findings):
+                themes.append(keyword.title())
+        
+        return themes[:10]  # Top 10 themes
+    
     def to_json(self) -> str:
         """Convert trend analysis to JSON"""
         return json.dumps(self, indent=2, default=str)
-
+    
     def save_report(self, filepath: str):
         """Save trend analysis to file"""
         with open(filepath, 'w') as f:

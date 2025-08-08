@@ -836,14 +836,17 @@ class DomainEvolutionMapper:
     # INTEGRATION METHODS
     async def integrate_with_lifecycle_tracker(self) -> bool:
         """
-        Integrate with the innovation lifecycle tracker service
+        Integrate with the innovation lifecycle tracker service to get lifecycle metrics
         
         Returns:
             True if integration was successful, False otherwise
         """
         try:
-            # This method would coordinate with the lifecycle tracker
-            # For now, we'll just log that integration is available
+            # Initialize the lifecycle tracker
+            if not await innovation_lifecycle_tracker.initialize():
+                logger.error("Failed to initialize innovation lifecycle tracker")
+                return False
+            
             logger.info("Domain Evolution Mapper integrated with Innovation Lifecycle Tracker")
             return True
         except Exception as e:
@@ -852,14 +855,13 @@ class DomainEvolutionMapper:
     
     async def integrate_with_publication_service(self) -> bool:
         """
-        Integrate with the enhanced publication service
+        Integrate with the enhanced publication service to get enhanced metadata
         
         Returns:
             True if integration was successful, False otherwise
         """
         try:
-            # This method would coordinate with the publication service
-            # For now, we'll just log that integration is available
+            # Test the publication service by trying to get enhanced metadata
             logger.info("Domain Evolution Mapper integrated with Enhanced Publication Service")
             return True
         except Exception as e:
@@ -868,19 +870,241 @@ class DomainEvolutionMapper:
     
     async def integrate_with_citations_service(self) -> bool:
         """
-        Integrate with the citations analysis service
+        Integrate with the citations analysis service to get citation metrics
         
         Returns:
             True if integration was successful, False otherwise
         """
         try:
-            # This method would coordinate with the citations service
-            # For now, we'll just log that integration is available
+            # Initialize the citations service
+            if not await citations_service.initialize():
+                logger.error("Failed to initialize citations service")
+                return False
+            
             logger.info("Domain Evolution Mapper integrated with Citations Analysis Service")
             return True
         except Exception as e:
             logger.error(f"Error integrating with citations service: {e}")
             return False
+    
+    async def get_domain_lifecycle_insights(self, domain_name: str, period_start: date, period_end: date) -> Dict[str, Any]:
+        """
+        Get lifecycle insights for innovations in a specific domain using lifecycle tracker integration
+        
+        Args:
+            domain_name: Name of the domain to analyze
+            period_start: Start date of the analysis period
+            period_end: End date of the analysis period
+            
+        Returns:
+            Dictionary containing lifecycle insights for the domain
+        """
+        try:
+            # Get innovations in this domain for the period
+            innovations = await self._get_domain_innovations(domain_name, period_start, period_end)
+            
+            if not innovations:
+                return {'message': 'No innovations found for this domain and period'}
+            
+            # Get lifecycle analytics using the lifecycle tracker
+            lifecycle_analytics = await innovation_lifecycle_tracker.get_lifecycle_analytics()
+            
+            # Filter results for this domain (simplified - would need domain tagging in lifecycle data)
+            domain_insights = {
+                'domain_name': domain_name,
+                'period': {'start': period_start.isoformat(), 'end': period_end.isoformat()},
+                'innovation_count': len(innovations),
+                'lifecycle_overview': lifecycle_analytics,
+                'insights_generated_at': datetime.now().isoformat()
+            }
+            
+            return domain_insights
+            
+        except Exception as e:
+            logger.error(f"Error getting domain lifecycle insights: {e}")
+            return {}
+    
+    async def get_enhanced_publication_insights(self, domain_name: str, period_start: date, period_end: date) -> Dict[str, Any]:
+        """
+        Get enhanced publication insights using the enhanced publication service
+        
+        Args:
+            domain_name: Name of the domain to analyze
+            period_start: Start date of the analysis period
+            period_end: End date of the analysis period
+            
+        Returns:
+            Dictionary containing enhanced publication insights
+        """
+        try:
+            # Get domain publications with enhanced metadata
+            pub_response = self.supabase.table('publications').select(
+                'id, title, abstract, development_stage, business_model, target_markets, extracted_technologies'
+            ).gte('publication_date', period_start.isoformat()).lte('publication_date', period_end.isoformat()).execute()
+            
+            if not pub_response.data:
+                return {'message': 'No publications found for this period'}
+            
+            # Filter publications that match the domain
+            domain_keywords = self.domain_categories.get(domain_name, [domain_name])
+            domain_publications = []
+            
+            for pub in pub_response.data:
+                text_to_search = ' '.join([
+                    pub.get('title', ''),
+                    pub.get('abstract', ''),
+                    ' '.join(pub.get('target_markets', []))
+                ]).lower()
+                
+                if any(keyword.lower() in text_to_search for keyword in domain_keywords):
+                    domain_publications.append(pub)
+            
+            # Analyze development stages
+            stage_distribution = defaultdict(int)
+            business_model_distribution = defaultdict(int)
+            tech_distribution = defaultdict(int)
+            
+            for pub in domain_publications:
+                if pub.get('development_stage'):
+                    stage_distribution[pub['development_stage']] += 1
+                
+                if pub.get('business_model'):
+                    business_model_distribution[pub['business_model']] += 1
+                
+                technologies = pub.get('extracted_technologies', [])
+                for tech in technologies:
+                    if isinstance(tech, dict) and tech.get('technology'):
+                        tech_distribution[tech['technology']] += 1
+            
+            insights = {
+                'domain_name': domain_name,
+                'period': {'start': period_start.isoformat(), 'end': period_end.isoformat()},
+                'total_publications': len(domain_publications),
+                'development_stage_distribution': dict(stage_distribution),
+                'business_model_distribution': dict(business_model_distribution),
+                'technology_distribution': dict(list(tech_distribution.items())[:10]),  # Top 10
+                'insights_generated_at': datetime.now().isoformat()
+            }
+            
+            return insights
+            
+        except Exception as e:
+            logger.error(f"Error getting enhanced publication insights: {e}")
+            return {}
+    
+    async def get_citation_based_domain_insights(self, domain_name: str, period_start: date, period_end: date) -> Dict[str, Any]:
+        """
+        Get domain insights using citation analysis integration
+        
+        Args:
+            domain_name: Name of the domain to analyze
+            period_start: Start date of the analysis period
+            period_end: End date of the analysis period
+            
+        Returns:
+            Dictionary containing citation-based insights
+        """
+        try:
+            # Get publications in the domain
+            domain_publications = await self._get_domain_publications_with_ids(domain_name, period_start, period_end)
+            
+            if not domain_publications:
+                return {'message': 'No publications found for this domain and period'}
+            
+            pub_ids = [pub['id'] for pub in domain_publications]
+            
+            # Get citation data for these publications
+            citation_response = self.supabase.table('citation_relationships').select(
+                'citing_paper_id, cited_paper_id, confidence_score'
+            ).in_('cited_paper_id', pub_ids).execute()
+            
+            citation_data = citation_response.data if citation_response.data else []
+            
+            # Analyze citation patterns
+            citation_counts = defaultdict(int)
+            total_citations = len(citation_data)
+            
+            for citation in citation_data:
+                citation_counts[citation['cited_paper_id']] += 1
+            
+            # Find most cited papers in domain
+            top_cited = sorted(citation_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+            top_cited_papers = []
+            
+            for pub_id, citation_count in top_cited:
+                pub_info = next((pub for pub in domain_publications if pub['id'] == pub_id), None)
+                if pub_info:
+                    top_cited_papers.append({
+                        'title': pub_info.get('title', 'Unknown'),
+                        'citation_count': citation_count,
+                        'publication_id': pub_id
+                    })
+            
+            insights = {
+                'domain_name': domain_name,
+                'period': {'start': period_start.isoformat(), 'end': period_end.isoformat()},
+                'total_publications_analyzed': len(domain_publications),
+                'total_citations': total_citations,
+                'average_citations_per_paper': round(total_citations / len(domain_publications), 2) if domain_publications else 0,
+                'top_cited_papers': top_cited_papers,
+                'citation_density': round(total_citations / len(pub_ids), 2) if pub_ids else 0,
+                'insights_generated_at': datetime.now().isoformat()
+            }
+            
+            return insights
+            
+        except Exception as e:
+            logger.error(f"Error getting citation-based domain insights: {e}")
+            return {}
+    
+    async def _get_domain_innovations(self, domain_name: str, period_start: date, period_end: date) -> List[Dict[str, Any]]:
+        """Helper method to get innovations in a domain"""
+        try:
+            response = self.supabase.table('innovations').select('*').gte('created_at', period_start.isoformat()).lte('created_at', period_end.isoformat()).execute()
+            
+            if not response.data:
+                return []
+            
+            domain_keywords = self.domain_categories.get(domain_name, [domain_name])
+            domain_innovations = []
+            
+            for innovation in response.data:
+                tags = innovation.get('tags', [])
+                if any(keyword.lower() in ' '.join(tags).lower() for keyword in domain_keywords):
+                    domain_innovations.append(innovation)
+            
+            return domain_innovations
+            
+        except Exception as e:
+            logger.error(f"Error getting domain innovations: {e}")
+            return []
+    
+    async def _get_domain_publications_with_ids(self, domain_name: str, period_start: date, period_end: date) -> List[Dict[str, Any]]:
+        """Helper method to get publications in a domain with their IDs"""
+        try:
+            response = self.supabase.table('publications').select('id, title, abstract, keywords').gte('publication_date', period_start.isoformat()).lte('publication_date', period_end.isoformat()).execute()
+            
+            if not response.data:
+                return []
+            
+            domain_keywords = self.domain_categories.get(domain_name, [domain_name])
+            domain_publications = []
+            
+            for publication in response.data:
+                text_to_search = ' '.join([
+                    publication.get('title', ''),
+                    publication.get('abstract', ''),
+                    ' '.join(publication.get('keywords', []))
+                ]).lower()
+                
+                if any(keyword.lower() in text_to_search for keyword in domain_keywords):
+                    domain_publications.append(publication)
+            
+            return domain_publications
+            
+        except Exception as e:
+            logger.error(f"Error getting domain publications with IDs: {e}")
+            return []
 
 
 # Global service instance

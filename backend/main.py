@@ -101,9 +101,19 @@ async def startup_event():
             logger.warning("Vector service initialization timed out - will retry on first use")
         except Exception as e:
             logger.error(f"Failed to initialize vector service: {e}")
+    
+    # Initialize enrichment scheduler
+    async def init_enrichment_scheduler():
+        try:
+            from services.enrichment_scheduler import start_enrichment_scheduler
+            await start_enrichment_scheduler()
+            logger.info("Enrichment scheduler started successfully")
+        except Exception as e:
+            logger.error(f"Failed to start enrichment scheduler: {e}")
 
     # Start initialization in background, don't wait for it
     asyncio.create_task(init_vector_service())
+    asyncio.create_task(init_enrichment_scheduler())
     logger.info("TAIFA-FIALA API startup complete - services initializing in background")
 
 
@@ -111,6 +121,14 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup on shutdown"""
     logger.info("Shutting down TAIFA-FIALA API...")
+    
+    # Stop enrichment scheduler
+    try:
+        from services.enrichment_scheduler import stop_enrichment_scheduler
+        await stop_enrichment_scheduler()
+        logger.info("Enrichment scheduler stopped")
+    except Exception as e:
+        logger.error(f"Error stopping enrichment scheduler: {e}")
 
 
 # Health Check
