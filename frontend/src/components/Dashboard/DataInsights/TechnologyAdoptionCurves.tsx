@@ -5,21 +5,7 @@ import { Activity, Award, Cpu, Globe, Layers, RefreshCw, Target, TrendingUp, Zap
 import { useEffect, useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-// Import the smart API detection
-const getApiBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname.includes('taifa-fiala') || hostname.includes('vercel.app') || hostname.includes('netlify.app')) {
-      return 'https://api.taifa-fiala.net';
-    }
-  }
-  return 'http://localhost:8030';
-};
-
-const API_BASE_URL = getApiBaseUrl()
+import { API_ENDPOINTS, apiClient } from '@/lib/api-client'
 
 interface TechnologyTrend {
   technology: string
@@ -123,23 +109,28 @@ export default function TechnologyAdoptionCurves() {
       if (isRefresh) setRefreshing(true)
       
       // Fetch real data from trends API endpoints
-      const [domainsResponse, emergingDomainsResponse, focusAreasResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/trends/domains/trends`),
-        fetch(`${API_BASE_URL}/api/trends/domains/emerging`),
-        fetch(`${API_BASE_URL}/api/trends/domains/focus-areas`)
+      const [domainsResponse, emergingDomainsResponse, focusAreasResponse, statsResponse] = await Promise.allSettled([
+        apiClient.get(API_ENDPOINTS.trends.domains),
+        apiClient.get(API_ENDPOINTS.trends.emerging),
+        apiClient.get(API_ENDPOINTS.trends.focusAreas),
+        apiClient.get(API_ENDPOINTS.stats)
       ])
 
       let realData: TechnologyAdoptionAnalytics | null = null
+      let stats: any = null
 
-      if (domainsResponse.ok && emergingDomainsResponse.ok && focusAreasResponse.ok) {
-        const [domainsData, emergingData, focusData] = await Promise.all([
-          domainsResponse.json(),
-          emergingDomainsResponse.json(),
-          focusAreasResponse.json()
-        ])
+      // Get basic stats
+      if (statsResponse.status === 'fulfilled') {
+        stats = statsResponse.value
+      }
+
+      if (domainsResponse.status === 'fulfilled' && emergingDomainsResponse.status === 'fulfilled' && focusAreasResponse.status === 'fulfilled') {
+        const domainsData = domainsResponse.value as any[]
+        const emergingData = emergingDomainsResponse.value as any[]
+        const focusData = focusAreasResponse.value as any
 
         // Transform real API data to component format
-        realData = await transformApiDataToComponentFormat(domainsData, emergingData, focusData)
+        realData = await transformApiDataToComponentFormat(domainsData, emergingData, focusData, stats)
       }
 
       // Use real data if available, otherwise fall back to mock data
@@ -157,7 +148,7 @@ export default function TechnologyAdoptionCurves() {
     }
   }
 
-  const transformApiDataToComponentFormat = async (domainsData: any[], emergingData: any[], focusData: any): Promise<TechnologyAdoptionAnalytics> => {
+  const transformApiDataToComponentFormat = async (domainsData: any[], emergingData: any[], focusData: any, stats: any): Promise<TechnologyAdoptionAnalytics> => {
     // Transform trending technologies from domains data
     const trending_technologies: TechnologyTrend[] = domainsData.slice(0, 4).map((domain, index) => ({
       technology: domain.domain_name || `Technology ${index + 1}`,
@@ -182,28 +173,29 @@ export default function TechnologyAdoptionCurves() {
       monthly_data: generateDeclineMonthlyData()
     }))
 
-    // Transform focus areas to geographic innovation density
+    // Transform focus areas to geographic innovation density using real stats
+    const totalInnovations = stats?.total_innovations || 300
     const geographic_innovation_density: GeographicInnovation[] = [
       {
         country: 'South Africa',
-        total_innovations: 156,
+        total_innovations: Math.round(totalInnovations * 0.35),
         population: 60_000_000,
-        innovations_per_capita: 2.60,
-        dominant_technologies: Object.keys(focusData.focus_areas || {}).slice(0, 3),
+        innovations_per_capita: Math.round(totalInnovations * 0.35) / 60,
+        dominant_technologies: Object.keys(focusData?.focus_areas || {}).slice(0, 3),
         innovation_density_score: 8.7,
         yearly_growth: 34.2
       },
       {
         country: 'Nigeria',
-        total_innovations: 134,
+        total_innovations: Math.round(totalInnovations * 0.25),
         population: 220_000_000,
-        innovations_per_capita: 0.61,
-        dominant_technologies: Object.keys(focusData.technologies || {}).slice(0, 3),
+        innovations_per_capita: Math.round(totalInnovations * 0.25) / 220,
+        dominant_technologies: Object.keys(focusData?.technologies || focusData?.focus_areas || {}).slice(0, 3),
         innovation_density_score: 7.9,
         yearly_growth: 45.8
       },
       // Add more countries with real or derived data
-      ...generateAdditionalCountries(focusData)
+      ...generateAdditionalCountries(focusData, totalInnovations)
     ]
 
     return {
@@ -261,25 +253,34 @@ export default function TechnologyAdoptionCurves() {
     })
   }
 
-  const generateAdditionalCountries = (focusData: any): GeographicInnovation[] => {
+  const generateAdditionalCountries = (focusData: any, totalInnovations: number): GeographicInnovation[] => {
     return [
       {
         country: 'Kenya',
-        total_innovations: 89,
+        total_innovations: Math.round(totalInnovations * 0.20),
         population: 55_000_000,
-        innovations_per_capita: 1.62,
+        innovations_per_capita: Math.round(totalInnovations * 0.20) / 55,
         dominant_technologies: ['AgriTech', 'Mobile AI', 'IoT'],
         innovation_density_score: 7.2,
         yearly_growth: 38.6
       },
       {
         country: 'Egypt',
-        total_innovations: 78,
+        total_innovations: Math.round(totalInnovations * 0.15),
         population: 105_000_000,
-        innovations_per_capita: 0.74,
+        innovations_per_capita: Math.round(totalInnovations * 0.15) / 105,
         dominant_technologies: ['Computer Vision', 'Healthcare AI', 'Smart Cities'],
         innovation_density_score: 6.8,
         yearly_growth: 29.4
+      },
+      {
+        country: 'Ghana',
+        total_innovations: Math.round(totalInnovations * 0.05),
+        population: 32_000_000,
+        innovations_per_capita: Math.round(totalInnovations * 0.05) / 32,
+        dominant_technologies: ['FinTech', 'EdTech', 'Healthcare AI'],
+        innovation_density_score: 6.2,
+        yearly_growth: 42.1
       }
     ]
   }

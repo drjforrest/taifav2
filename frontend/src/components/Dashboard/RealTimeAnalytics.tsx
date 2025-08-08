@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { TrendingUp, FileText, Users, Globe, Lightbulb, Zap, RefreshCw, Activity } from 'lucide-react'
-import { Section3Text } from '@/components/ui/adaptive-text'
 import EnrichmentResultsTable from '@/components/Dashboard/EnrichmentResultsTable'
+import { Section3Text } from '@/components/ui/adaptive-text'
+import { Activity, FileText, Globe, Lightbulb, RefreshCw, TrendingUp, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8030'
+import { API_ENDPOINTS, apiClient } from '@/lib/api-client'
 
 interface AnalyticsData {
   monthly_innovations: Array<{
@@ -76,68 +76,197 @@ export default function RealTimeAnalytics() {
     try {
       setError(null)
       
-      // Try to fetch real data from multiple endpoints
-      const [innovationsResponse, enrichmentResponse] = await Promise.allSettled([
-        fetch(`${API_BASE_URL}/api/analytics/innovations`),
-        fetch(`${API_BASE_URL}/api/etl/results/enrichment`)
+      // Fetch real data from multiple endpoints
+      const [innovationsResponse, publicationsResponse, etlResponse] = await Promise.allSettled([
+        apiClient.get(API_ENDPOINTS.analytics.innovations),
+        apiClient.get(API_ENDPOINTS.analytics.publications),
+        apiClient.get(API_ENDPOINTS.analytics.etlPerformance)
       ])
 
-      // Use mock data for now while building the interface
-      const mockData: AnalyticsData = {
-        monthly_innovations: [
-          { month: 'Jan 2024', innovations: 45, publications: 32, enrichments: 8 },
-          { month: 'Feb 2024', innovations: 52, publications: 38, enrichments: 12 },
-          { month: 'Mar 2024', innovations: 67, publications: 45, enrichments: 15 },
-          { month: 'Apr 2024', innovations: 58, publications: 41, enrichments: 18 },
-          { month: 'May 2024', innovations: 71, publications: 52, enrichments: 22 },
-          { month: 'Jun 2024', innovations: 83, publications: 61, enrichments: 28 },
-          { month: 'Jul 2024', innovations: 92, publications: 68, enrichments: 34 },
-          { month: 'Aug 2024', innovations: 89, publications: 72, enrichments: 41 }
-        ],
-        domain_distribution: [
-          { domain: 'Healthcare AI', count: 89, percentage: 23.5 },
-          { domain: 'AgriTech', count: 72, percentage: 19.0 },
-          { domain: 'FinTech', count: 65, percentage: 17.2 },
-          { domain: 'EdTech', count: 54, percentage: 14.3 },
-          { domain: 'Climate Tech', count: 43, percentage: 11.4 },
-          { domain: 'Other', count: 55, percentage: 14.6 }
-        ],
-        country_distribution: [
-          { country: 'South Africa', count: 124, innovations: 89, publications: 35 },
-          { country: 'Kenya', count: 98, innovations: 67, publications: 31 },
-          { country: 'Nigeria', count: 87, innovations: 62, publications: 25 },
-          { country: 'Egypt', count: 76, innovations: 54, publications: 22 },
-          { country: 'Ghana', count: 45, innovations: 32, publications: 13 },
-          { country: 'Tunisia', count: 38, innovations: 28, publications: 10 },
-          { country: 'Rwanda', count: 32, innovations: 21, publications: 11 },
-          { country: 'Other', count: 78, innovations: 56, publications: 22 }
-        ],
-        verification_pipeline: [
-          { status: 'Verified', count: 234, percentage: 62.1 },
-          { status: 'Under Review', count: 89, percentage: 23.6 },
-          { status: 'Community Validated', count: 54, percentage: 14.3 }
-        ],
-        recent_activity: [
-          { id: '1', type: 'innovation', title: 'AI-Powered Medical Diagnosis Platform', timestamp: '2024-08-05T10:30:00Z', country: 'Nigeria' },
-          { id: '2', type: 'enrichment', title: 'Weekly Innovation Landscape Report', timestamp: '2024-08-05T09:15:00Z' },
-          { id: '3', type: 'publication', title: 'Machine Learning for Crop Yield Prediction', timestamp: '2024-08-05T08:45:00Z', country: 'Kenya' },
-          { id: '4', type: 'innovation', title: 'Blockchain-Based Supply Chain Tracker', timestamp: '2024-08-05T07:20:00Z', country: 'Ghana' },
-          { id: '5', type: 'enrichment', title: 'Funding Landscape Analysis', timestamp: '2024-08-05T06:10:00Z' }
-        ],
-        enrichment_stats: {
-          total_reports: 156,
-          reports_this_week: 12,
-          avg_confidence: 0.87
+      let realData: AnalyticsData | null = null
+
+      // Process innovations data
+      if (innovationsResponse.status === 'fulfilled') {
+        const innovationsData = innovationsResponse.value
+        
+        // Process publications data
+        let publicationsData = null
+        if (publicationsResponse.status === 'fulfilled') {
+          publicationsData = publicationsResponse.value
         }
+
+        // Process ETL data
+        let etlData = null
+        if (etlResponse.status === 'fulfilled') {
+          etlData = etlResponse.value
+        }
+
+        // Transform real API data to component format
+        realData = transformApiDataToAnalyticsFormat(innovationsData, publicationsData, etlData)
       }
-      
-      setData(mockData)
+
+      // Use real data if available, otherwise fall back to mock data
+      const dataToUse = realData || getMockAnalyticsData()
+      setData(dataToUse)
       
     } catch (err) {
       console.error('Error fetching analytics data:', err)
       setError(err instanceof Error ? err.message : 'Failed to load analytics data')
+      // Fall back to mock data on error
+      setData(getMockAnalyticsData())
     } finally {
       setLoading(false)
+    }
+  }
+
+  const transformApiDataToAnalyticsFormat = (innovationsData: any, publicationsData: any, etlData: any): AnalyticsData => {
+    // Transform timeline data from innovations
+    const timeline = innovationsData?.timeline || []
+    const monthly_innovations = timeline.map((item: any) => ({
+      month: item.label || item.period,
+      innovations: item.count || 0,
+      publications: 0, // Will be filled from publications data
+      enrichments: 0
+    }))
+
+    // Add publications data to timeline
+    if (publicationsData?.timeline) {
+      publicationsData.timeline.forEach((pubItem: any) => {
+        const matchingMonth = monthly_innovations.find((m: any) => m.month === (pubItem.label || pubItem.period))
+        if (matchingMonth) {
+          matchingMonth.publications = pubItem.count || 0
+        }
+      })
+    }
+
+    // Transform domain distribution
+    const domain_distribution = Object.entries(innovationsData?.by_type || {}).map(([domain, count]: [string, any]) => {
+      const total = innovationsData?.summary?.total_innovations || 1
+      return {
+        domain,
+        count: count as number,
+        percentage: Math.round((count as number / total) * 100 * 10) / 10
+      }
+    })
+
+    // Transform country distribution
+    const country_distribution = Object.entries(innovationsData?.by_country || {}).map(([country, count]: [string, any]) => ({
+      country,
+      count: count as number,
+      innovations: count as number,
+      publications: 0 // Could be enhanced with publications by country
+    }))
+
+    // Transform verification pipeline
+    const verification_pipeline = Object.entries(innovationsData?.by_verification_status || {}).map(([status, count]: [string, any]) => {
+      const total = innovationsData?.summary?.total_innovations || 1
+      return {
+        status: status.charAt(0).toUpperCase() + status.slice(1),
+        count: count as number,
+        percentage: Math.round((count as number / total) * 100 * 10) / 10
+      }
+    })
+
+    // Create recent activity from multiple sources
+    const recent_activity: Array<{
+      id: string
+      type: 'innovation' | 'publication' | 'enrichment'
+      title: string
+      timestamp: string
+      country?: string
+    }> = []
+    
+    // Add recent innovations
+    if (innovationsData?.recent_innovations) {
+      innovationsData.recent_innovations.slice(0, 3).forEach((innovation: any, index: number) => {
+        recent_activity.push({
+          id: `innovation-${index}`,
+          type: 'innovation' as const,
+          title: innovation.title || 'New Innovation',
+          timestamp: innovation.created_at || new Date().toISOString(),
+          country: innovation.country
+        })
+      })
+    }
+
+    // Add recent publications
+    if (publicationsData?.recent_publications) {
+      publicationsData.recent_publications.slice(0, 2).forEach((publication: any, index: number) => {
+        recent_activity.push({
+          id: `publication-${index}`,
+          type: 'publication' as const,
+          title: publication.title || 'New Publication',
+          timestamp: publication.created_at || new Date().toISOString(),
+          country: publication.country
+        })
+      })
+    }
+
+    return {
+      monthly_innovations,
+      domain_distribution,
+      country_distribution,
+      verification_pipeline,
+      recent_activity: recent_activity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      enrichment_stats: {
+        total_reports: etlData?.recent_activity?.length || 0,
+        reports_this_week: etlData?.recent_activity?.filter((item: any) => {
+          const itemDate = new Date(item.timestamp || item.created_at)
+          const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          return itemDate > weekAgo
+        }).length || 0,
+        avg_confidence: 0.85 // Could be calculated from actual enrichment data
+      }
+    }
+  }
+
+  const getMockAnalyticsData = (): AnalyticsData => {
+    return {
+      monthly_innovations: [
+        { month: 'Jan 2024', innovations: 45, publications: 32, enrichments: 8 },
+        { month: 'Feb 2024', innovations: 52, publications: 38, enrichments: 12 },
+        { month: 'Mar 2024', innovations: 67, publications: 45, enrichments: 15 },
+        { month: 'Apr 2024', innovations: 58, publications: 41, enrichments: 18 },
+        { month: 'May 2024', innovations: 71, publications: 52, enrichments: 22 },
+        { month: 'Jun 2024', innovations: 83, publications: 61, enrichments: 28 },
+        { month: 'Jul 2024', innovations: 92, publications: 68, enrichments: 34 },
+        { month: 'Aug 2024', innovations: 89, publications: 72, enrichments: 41 }
+      ],
+      domain_distribution: [
+        { domain: 'Healthcare AI', count: 89, percentage: 23.5 },
+        { domain: 'AgriTech', count: 72, percentage: 19.0 },
+        { domain: 'FinTech', count: 65, percentage: 17.2 },
+        { domain: 'EdTech', count: 54, percentage: 14.3 },
+        { domain: 'Climate Tech', count: 43, percentage: 11.4 },
+        { domain: 'Other', count: 55, percentage: 14.6 }
+      ],
+      country_distribution: [
+        { country: 'South Africa', count: 124, innovations: 89, publications: 35 },
+        { country: 'Kenya', count: 98, innovations: 67, publications: 31 },
+        { country: 'Nigeria', count: 87, innovations: 62, publications: 25 },
+        { country: 'Egypt', count: 76, innovations: 54, publications: 22 },
+        { country: 'Ghana', count: 45, innovations: 32, publications: 13 },
+        { country: 'Tunisia', count: 38, innovations: 28, publications: 10 },
+        { country: 'Rwanda', count: 32, innovations: 21, publications: 11 },
+        { country: 'Other', count: 78, innovations: 56, publications: 22 }
+      ],
+      verification_pipeline: [
+        { status: 'Verified', count: 234, percentage: 62.1 },
+        { status: 'Under Review', count: 89, percentage: 23.6 },
+        { status: 'Community Validated', count: 54, percentage: 14.3 }
+      ],
+      recent_activity: [
+        { id: '1', type: 'innovation', title: 'AI-Powered Medical Diagnosis Platform', timestamp: '2024-08-05T10:30:00Z', country: 'Nigeria' },
+        { id: '2', type: 'enrichment', title: 'Weekly Innovation Landscape Report', timestamp: '2024-08-05T09:15:00Z' },
+        { id: '3', type: 'publication', title: 'Machine Learning for Crop Yield Prediction', timestamp: '2024-08-05T08:45:00Z', country: 'Kenya' },
+        { id: '4', type: 'innovation', title: 'Blockchain-Based Supply Chain Tracker', timestamp: '2024-08-05T07:20:00Z', country: 'Ghana' },
+        { id: '5', type: 'enrichment', title: 'Funding Landscape Analysis', timestamp: '2024-08-05T06:10:00Z' }
+      ],
+      enrichment_stats: {
+        total_reports: 156,
+        reports_this_week: 12,
+        avg_confidence: 0.87
+      }
     }
   }
 

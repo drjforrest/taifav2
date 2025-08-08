@@ -1,13 +1,14 @@
 "use client";
 
-import RealTimeAnalytics from "@/components/Dashboard/RealTimeAnalytics";
-import PublicationsTable from "@/components/Dashboard/PublicationsTable";
 import DataCompletenessWidget from "@/components/Dashboard/DataCompletenessWidget";
 import {
-  ResearchToInnovationPipeline,
   CollaborationHeatMap,
+  ResearchToInnovationPipeline,
   TechnologyAdoptionCurves
 } from "@/components/Dashboard/DataInsights";
+import DataValidationPanel from "@/components/Dashboard/DataValidationPanel";
+import PublicationsTable from "@/components/Dashboard/PublicationsTable";
+import RealTimeAnalytics from "@/components/Dashboard/RealTimeAnalytics";
 import {
   Section1Text,
   Section2Text,
@@ -26,16 +27,15 @@ import {
   Globe,
   Hash,
   Loader2,
+  Network,
   Play,
   RefreshCw,
   Rss,
+  Target,
   TrendingUp,
   Users,
   XCircle,
-  Zap,
-  Network,
-  Brain,
-  Target
+  Zap
 } from "lucide-react";
 import { useState } from "react";
 
@@ -284,6 +284,16 @@ export default function DashboardStats() {
               </span>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Data Validation Panel */}
+      <section
+        className="py-8"
+        style={{ backgroundColor: "var(--color-background-section-1)" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <DataValidationPanel />
         </div>
       </section>
 

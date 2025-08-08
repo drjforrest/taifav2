@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { apiClient, API_ENDPOINTS } from "@/lib/api-client";
-import { 
-  DashboardStats, 
-  RecentActivity, 
-  ETLStatus, 
-  ETLHealth, 
-  ETLMetrics 
+import { API_ENDPOINTS, apiClient } from "@/lib/api-client";
+import {
+  DashboardStats,
+  ETLHealth,
+  ETLStatus,
+  RecentActivity
 } from "@/types/api";
+import { useEffect, useState } from "react";
 
 export interface DashboardData extends DashboardStats {
   loading: boolean;
@@ -45,7 +44,7 @@ export function useDashboard(): DashboardData {
     try {
       setDashboardData((prev) => ({ ...prev, loading: true, error: null }));
 
-      // Get dashboard stats from API
+      // Get dashboard stats from API with enhanced error handling
       const apiData = await apiClient.get<DashboardStats>(API_ENDPOINTS.stats);
         
       setDashboardData({
@@ -63,14 +62,21 @@ export function useDashboard(): DashboardData {
       });
     } catch (err) {
       console.error("Error fetching dashboard stats:", err);
-      setDashboardData((prev) => ({
-        ...prev,
+      
+      // Provide fallback data to keep dashboard functional
+      setDashboardData({
+        total_publications: 0,
+        total_innovations: 0,
+        total_organizations: 0,
+        verified_individuals: 0,
+        african_countries_covered: 0,
+        unique_keywords: 0,
+        avg_african_relevance: 0,
+        avg_ai_relevance: 0,
+        last_updated: new Date().toISOString(),
         loading: false,
-        error:
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch dashboard statistics",
-      }));
+        error: err instanceof Error ? err.message : "Failed to fetch dashboard statistics",
+      });
     }
   };
 
@@ -92,9 +98,33 @@ export function useRecentActivity() {
 
   const fetchRecentActivity = async () => {
     try {
-      const activityData = await apiClient.get<RecentActivity>(
-        API_ENDPOINTS.recentActivity
-      );
+      // Try to fetch from recent activity endpoint, fallback to analytics if needed
+      let activityData: RecentActivity;
+      
+      try {
+        activityData = await apiClient.get<RecentActivity>(API_ENDPOINTS.recentActivity);
+      } catch (recentActivityError) {
+        console.warn("Recent activity endpoint not available, trying analytics endpoints");
+        
+        // Fallback to analytics endpoints
+        const [innovationsResponse, publicationsResponse] = await Promise.allSettled([
+          apiClient.get(API_ENDPOINTS.analytics.innovations),
+          apiClient.get(API_ENDPOINTS.analytics.publications)
+        ]);
+
+        const recentInnovations = innovationsResponse.status === 'fulfilled'
+          ? (innovationsResponse.value as any)?.recent_innovations?.slice(0, 5) || []
+          : [];
+        
+        const recentPublications = publicationsResponse.status === 'fulfilled'
+          ? (publicationsResponse.value as any)?.recent_publications?.slice(0, 5) || []
+          : [];
+
+        activityData = {
+          recentPublications,
+          recentInnovations
+        };
+      }
 
       setActivity({
         recentPublications: activityData.recentPublications || [],
@@ -104,14 +134,12 @@ export function useRecentActivity() {
       });
     } catch (err) {
       console.error("Error fetching recent activity:", err);
-      setActivity((prev) => ({
-        ...prev,
+      setActivity({
+        recentPublications: [],
+        recentInnovations: [],
         loading: false,
-        error:
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch recent activity",
-      }));
+        error: err instanceof Error ? err.message : "Failed to fetch recent activity",
+      });
     }
   };
 
