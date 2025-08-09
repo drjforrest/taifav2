@@ -1116,7 +1116,6 @@ async def submit_innovation_vote(
 @app.get("/api/innovations/{innovation_id}/votes", response_model=InnovationVotingStats)
 @limiter.limit("60/minute")
 async def get_innovation_voting_stats(innovation_id: UUID, request: Request):
-    """Get voting statistics for an innovation"""
     try:
         from config.database import get_supabase
 
@@ -1161,7 +1160,6 @@ async def get_innovation_voting_stats(innovation_id: UUID, request: Request):
         # Determine verification status based on votes
         from utils.voting_utils import compute_verification_status
 
-        current_status = innovation_response.data[0]["verification_status"]
         computed_status = compute_verification_status(
             yes_votes, no_votes, need_more_info_votes, total_votes
         )
@@ -1324,7 +1322,6 @@ async def run_serper_search(
     country: Optional[str],
     num_results: int,
 ):
-    """Run Serper search job"""
     try:
         logger.info(f"Starting Serper search job {job_id}")
 
@@ -1332,10 +1329,77 @@ async def run_serper_search(
             innovation_type, country, num_results
         )
 
-        # Process and store results (implementation would be more complex)
-        logger.info(
-            f"Serper search job {job_id} completed: {len(results)} results processed"
-        )
+        if results:
+            logger.info(
+                f"Processing {len(results)} Serper search results for database storage"
+            )
+
+            from etl.intelligence.data_collection_orchestrator import (
+                DataCollectionOrchestrator,
+            )
+            from services.database_service import DatabaseService
+            from services.deduplication_service import DeduplicationService
+            from services.etl_deduplication import (
+                check_and_handle_innovation_duplicates,
+            )
+
+            async with DataCollectionOrchestrator(
+                perplexity_api_key=settings.PERPLEXITY_API_KEY,
+                openai_api_key=settings.OPENAI_API_KEY,
+            ):
+                db_service = DatabaseService()
+                dedup_service = DeduplicationService()
+
+                stored_count = 0
+                for result in results:
+                    try:
+                        innovation_data = {
+                            "title": result.title,
+                            "description": result.snippet,
+                            "innovation_type": innovation_type or "software",
+                            "source_url": str(result.link),
+                            "source_type": "serper_discovery",
+                            "verification_status": "pending",
+                            "visibility": "public",
+                            "country": country,
+                            "creation_date": None,
+                            "extraction_metadata": {
+                                "search_position": result.position,
+                                "discovery_date": datetime.now().isoformat(),
+                                "source_query": f"innovation_type={innovation_type}, country={country}",
+                            },
+                        }
+
+                        (
+                            success,
+                            stored_record,
+                            action,
+                        ) = await check_and_handle_innovation_duplicates(
+                            innovation_data,
+                            db_service,
+                            dedup_service,
+                            action="reject",
+                        )
+
+                        if success and stored_record:
+                            stored_count += 1
+                            logger.info(
+                                f"✅ Stored new innovation from Serper ({action}): {result.title[:50]}..."
+                            )
+                        elif not success:
+                            logger.info(
+                                f"🔄 Duplicate innovation detected ({action}): {result.title[:50]}..."
+                            )
+
+                    except Exception as result_error:
+                        logger.error(f"Error processing Serper result: {result_error}")
+                        continue
+
+                logger.info(
+                    f"Serper search job {job_id} completed: {stored_count}/{len(results)} new innovations stored"
+                )
+        else:
+            logger.warning(f"Serper search job {job_id}: No results found to process")
 
     except Exception as e:
         logger.error(f"Serper search job {job_id} failed: {e}")
