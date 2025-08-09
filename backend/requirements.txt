@@ -30,3 +30,10 @@ aioredis
 cachetools
 redis
 xmltodict
+# Manual document processing
+watchdog
+pymupdf4llm
+marker-pdf
+watchdog
+fitz
+pymupdftoc
