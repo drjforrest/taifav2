@@ -1,27 +1,48 @@
 "use client";
 
+import {
+  Section1Text,
+  Section2Text,
+  Section3Text,
+} from "@/components/ui/adaptive-text";
+import { ArrowRight, Briefcase, MapPin, TrendingUp, Users } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import Announcements from "../components/Homepage/Announcements";
 
-// Dynamically import FundingChart to avoid loading react-tabs CSS on pages that don't use it
+// Dynamically import components to avoid loading issues
 const FundingChart = dynamic(() => import("../components/Homepage/FundingChart"), {
   ssr: false,
   loading: () => (
     <div className="animate-pulse">
-      <div 
+      <div
         className="rounded-lg h-96 w-full"
         style={{ backgroundColor: "var(--color-muted)" }}
       />
     </div>
   ),
 });
-import {
-  Section1Text,
-  Section2Text,
-  Section3Text,
-} from "@/components/ui/adaptive-text";
-import { TrendingUp, MapPin, Users, Briefcase, ArrowRight } from "lucide-react";
-import Link from "next/link";
+
+const RealDataDashboard = dynamic(() => import("../components/Homepage/RealDataDashboard"), {
+  ssr: false,
+  loading: () => (
+    <div className="animate-pulse">
+      <div
+        className="rounded-lg h-64 w-full mb-4"
+        style={{ backgroundColor: "var(--color-muted)" }}
+      />
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="h-32 rounded-lg"
+            style={{ backgroundColor: "var(--color-muted)" }}
+          />
+        ))}
+      </div>
+    </div>
+  ),
+});
 
 export default function Home() {
   return (
@@ -70,29 +91,39 @@ export default function Home() {
               variant="paragraph"
               className="text-xl md:text-2xl max-w-3xl mx-auto"
             >
-             Since 2023, over $1.2 billion has been invested in African AI ventures across the continent—most in fintech, few in health.
-             We are aggregating open data on AI innovations—funded and unfunded, commercial and academic—to better understand where innovation is happening, who it serves, and who it is leaving behind.
+             Our ETL pipeline continuously discovers and analyzes African AI innovations from academic papers, industry reports, and innovation databases.
+             We track real progress across {/* will be dynamically populated */} countries and {/* will be dynamically populated */} verified innovations to understand where innovation is happening, who it serves, and who it is leaving behind.
             </Section1Text>
           </div>
         </div>
       </section>
 
-      {/* Funding Analysis Section */}
+      {/* Real-Time Data Section */}
       <section
         className="py-16"
         style={{ backgroundColor: "var(--color-background-section-2)" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <RealDataDashboard />
+        </div>
+      </section>
+
+      {/* Funding Analysis Section (Historical Data) */}
+      <section
+        className="py-16"
+        style={{ backgroundColor: "var(--color-background-section-3)" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <Section2Text as="h2" className="text-3xl font-bold mb-4">
-              African AI Investment Analysis
+              Historical Investment Context
             </Section2Text>
             <Section2Text
               as="p"
               variant="paragraph"
               className="text-lg max-w-2xl mx-auto"
             >
-              A comprehensive look at the data behind these investments.
+              Understanding the broader investment landscape that contextualizes our live discoveries.
             </Section2Text>
           </div>
           <FundingChart />
@@ -125,7 +156,7 @@ export default function Home() {
       {/* Equity Tracking Section */}
       <section
         className="py-20"
-        style={{ backgroundColor: "var(--color-background-section-3)" }}
+        style={{ backgroundColor: "var(--color-background-section-1)" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
