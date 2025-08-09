@@ -7,8 +7,8 @@ import {
   TechnologyAdoptionCurves
 } from "@/components/Dashboard/DataInsights";
 import DataValidationPanel from "@/components/Dashboard/DataValidationPanel";
-import RecentDiscoveries from "@/components/Dashboard/RecentDiscoveries";
 import RealTimeAnalytics from "@/components/Dashboard/RealTimeAnalytics";
+import RecentDiscoveries from "@/components/Dashboard/RecentDiscoveries";
 import {
   Section1Text,
   Section2Text,
@@ -1163,7 +1163,19 @@ export default function DashboardStats() {
                   <button
                     onClick={handleTriggerEnrichment}
                     disabled={etlLoading}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors disabled:opacity-50"
+                    style={{
+                      backgroundColor: "var(--color-primary)",
+                      color: "var(--color-primary-foreground)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!etlLoading) {
+                        e.currentTarget.style.opacity = '0.9';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
                   >
                     {etlLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -1175,7 +1187,17 @@ export default function DashboardStats() {
                   
                   <button
                     onClick={() => window.open('/admin/data-completeness', '_blank')}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors"
+                    style={{
+                      backgroundColor: "var(--color-accent)",
+                      color: "var(--color-accent-foreground)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.9';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
                   >
                     <Database className="w-4 h-4" />
                     Detailed Analysis
@@ -1196,24 +1218,58 @@ export default function DashboardStats() {
                 </h3>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Database</span>
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--color-text-card-paragraph)" }}
+                    >
+                      Database
+                    </span>
                     <div className="flex items-center gap-1">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">Healthy</span>
+                      <CheckCircle
+                        className="w-4 h-4"
+                        style={{ color: "var(--color-success)" }}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{ color: "var(--color-card-foreground)" }}
+                      >
+                        Healthy
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Intelligence Pipeline</span>
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--color-text-card-paragraph)" }}
+                    >
+                      Intelligence Pipeline
+                    </span>
                     <div className="flex items-center gap-1">
                       {etlStatus?.enrichment_pipeline_active ? (
                         <>
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                          <span className="text-sm">Active</span>
+                          <CheckCircle
+                            className="w-4 h-4"
+                            style={{ color: "var(--color-success)" }}
+                          />
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--color-card-foreground)" }}
+                          >
+                            Active
+                          </span>
                         </>
                       ) : (
                         <>
-                          <XCircle className="w-4 h-4 text-red-500" />
-                          <span className="text-sm">Inactive</span>
+                          <XCircle
+                            className="w-4 h-4"
+                            style={{ color: "var(--color-destructive)" }}
+                          />
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--color-card-foreground)" }}
+                          >
+                            Inactive
+                          </span>
                         </>
                       )}
                     </div>

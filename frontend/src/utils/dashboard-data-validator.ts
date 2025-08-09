@@ -66,7 +66,7 @@ export class DashboardDataValidator {
     if (data._isMockData || data.mock || data.demo) return false
 
     // For stats endpoint, check if we have real database counts
-    if (data.total_innovations > 0 || data.total_publications > 0 || 
+    if (data.total_innovations > 0 || data.total_publications > 0 ||
         data.total_organizations > 0) {
       return true
     }
@@ -89,6 +89,17 @@ export class DashboardDataValidator {
       return true // ETL configuration exists even if pipelines haven't run recently
     }
 
+    // Special handling for trends endpoints - they return valid empty data structures
+    // when no data has been tracked yet, which is still "real" (not fallback)
+    if (this.isTrendsEndpointWithValidStructure(data)) {
+      return true
+    }
+
+    // For data intelligence endpoints, having valid structure counts as real data
+    if (this.isDataIntelligenceEndpointWithValidStructure(data)) {
+      return true
+    }
+
     // Check if we have any meaningful non-zero numeric values
     if (typeof data === 'object') {
       for (const key in data) {
@@ -103,6 +114,46 @@ export class DashboardDataValidator {
           }
         }
       }
+    }
+
+    return false
+  }
+
+  private isTrendsEndpointWithValidStructure(data: any): boolean {
+    // Lifecycles endpoint structure
+    if (data.hasOwnProperty('total_records') &&
+        data.hasOwnProperty('stage_distribution') &&
+        data.hasOwnProperty('completion_rates')) {
+      return true
+    }
+
+    // Domain trends endpoint (empty array is valid)
+    if (Array.isArray(data)) {
+      return true
+    }
+
+    // Focus areas endpoint structure
+    if (data.hasOwnProperty('focus_areas') &&
+        data.hasOwnProperty('total_publications_analyzed')) {
+      return true
+    }
+
+    return false
+  }
+
+  private isDataIntelligenceEndpointWithValidStructure(data: any): boolean {
+    // Citation analytics structure
+    if (data.hasOwnProperty('network_overview') &&
+        data.hasOwnProperty('network_statistics') &&
+        data.hasOwnProperty('generated_at')) {
+      return true
+    }
+
+    // Publication intelligence structure
+    if (data.hasOwnProperty('overview') &&
+        data.hasOwnProperty('institutional_landscape') &&
+        data.hasOwnProperty('generated_at')) {
+      return true
     }
 
     return false

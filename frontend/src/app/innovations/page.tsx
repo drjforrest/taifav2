@@ -13,6 +13,9 @@ import {
   MapPin,
   Search,
   Tag,
+  ThumbsUp,
+  ThumbsDown,
+  HelpCircle,
   TrendingUp,
   Users,
   Zap
@@ -65,6 +68,16 @@ interface Innovation {
   };
 }
 
+interface VotingStats {
+  innovation_id: string;
+  total_votes: number;
+  yes_votes: number;
+  no_votes: number;
+  need_more_info_votes: number;
+  confidence_score: number;
+  verification_status: string;
+}
+
 interface SearchParams {
   query: string;
   innovation_type?: string;
@@ -82,6 +95,8 @@ export default function ExploreDataPage() {
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [searchMetadata, setSearchMetadata] = useState<any>(null);
+  const [votingStats, setVotingStats] = useState<Record<string, VotingStats>>({});
+  const [voting, setVoting] = useState<Record<string, boolean>>({});
 
   // Search and filter state
   const [searchParams, setSearchParams] = useState<SearchParams>({
@@ -330,6 +345,64 @@ export default function ExploreDataPage() {
       maximumFractionDigits: 1,
     }).format(total);
   };
+
+  // Voting functions
+  const fetchVotingStats = async (innovationId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/innovations/${innovationId}/votes`);
+      if (response.ok) {
+        const stats = await response.json();
+        setVotingStats(prev => ({ ...prev, [innovationId]: stats }));
+      }
+    } catch (error) {
+      console.error("Error fetching voting stats:", error);
+    }
+  };
+
+  const submitVote = async (innovationId: string, voteType: 'yes' | 'no' | 'need_more_info') => {
+    if (voting[innovationId]) return; // Prevent double voting
+    
+    setVoting(prev => ({ ...prev, [innovationId]: true }));
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/innovations/${innovationId}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          innovation_id: innovationId,
+          vote_type: voteType,
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh voting stats
+        await fetchVotingStats(innovationId);
+      } else if (response.status === 400) {
+        const error = await response.json();
+        alert(error.detail || 'You have already voted on this innovation');
+      } else {
+        throw new Error('Failed to submit vote');
+      }
+    } catch (error) {
+      console.error("Error submitting vote:", error);
+      alert('Failed to submit vote. Please try again.');
+    } finally {
+      setVoting(prev => ({ ...prev, [innovationId]: false }));
+    }
+  };
+
+  // Fetch voting stats for innovations
+  useEffect(() => {
+    if (innovations.length > 0) {
+      innovations.forEach(innovation => {
+        if (innovation.id && !votingStats[innovation.id]) {
+          fetchVotingStats(innovation.id);
+        }
+      });
+    }
+  }, [innovations]);
 
   return (
     <div
@@ -917,6 +990,75 @@ export default function ExploreDataPage() {
                         )}
                       </div>
                     )}
+
+                    {/* Voting Section */}
+                    <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                          Does this meet AI innovation criteria?
+                        </h4>
+                        {votingStats[innovation.id] && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {votingStats[innovation.id].total_votes} votes
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex gap-2 mb-3">
+                        <button
+                          onClick={() => submitVote(innovation.id, 'yes')}
+                          disabled={voting[innovation.id]}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ThumbsUp className="h-4 w-4" />
+                          Yes
+                          {votingStats[innovation.id] && (
+                            <span className="ml-1 text-xs">
+                              ({votingStats[innovation.id].yes_votes})
+                            </span>
+                          )}
+                        </button>
+                        
+                        <button
+                          onClick={() => submitVote(innovation.id, 'no')}
+                          disabled={voting[innovation.id]}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-red-100 hover:bg-red-200 text-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ThumbsDown className="h-4 w-4" />
+                          No
+                          {votingStats[innovation.id] && (
+                            <span className="ml-1 text-xs">
+                              ({votingStats[innovation.id].no_votes})
+                            </span>
+                          )}
+                        </button>
+                        
+                        <button
+                          onClick={() => submitVote(innovation.id, 'need_more_info')}
+                          disabled={voting[innovation.id]}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <HelpCircle className="h-4 w-4" />
+                          Need Info
+                          {votingStats[innovation.id] && (
+                            <span className="ml-1 text-xs">
+                              ({votingStats[innovation.id].need_more_info_votes})
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                      
+                      {votingStats[innovation.id] && votingStats[innovation.id].total_votes > 0 && (
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                          <span>
+                            Confidence: {(votingStats[innovation.id].confidence_score * 100).toFixed(0)}%
+                          </span>
+                          <span>
+                            Status: {votingStats[innovation.id].verification_status}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Footer with CTA */}
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">

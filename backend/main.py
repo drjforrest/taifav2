@@ -15,7 +15,9 @@ from api.analytics import router as analytics_router
 from api.data_completeness import router as data_completeness_router
 from api.data_intelligence import router as data_intelligence_router
 from api.enhanced_data_completeness import router as enhanced_data_completeness_router
+from api.entity_relationships import router as entity_relationships_router
 from api.etl_live import router as etl_live_router
+from api.longitudinal_intelligence import router as longitudinal_intelligence_router
 from api.trends import router as trends_router
 from config.settings import settings
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
@@ -28,6 +30,9 @@ from models.schemas import (
     InnovationResponse,
     InnovationSearchResponse,
     InnovationStats,
+    InnovationVoteCreate,
+    InnovationVoteResponse,
+    InnovationVotingStats,
 )
 from services.vector_service import VectorService, get_vector_service
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -88,6 +93,8 @@ app.include_router(analytics_router)
 app.include_router(data_intelligence_router)
 app.include_router(ai_assistant_router)
 app.include_router(trends_router)
+app.include_router(entity_relationships_router)
+app.include_router(longitudinal_intelligence_router)
 
 
 @app.on_event("startup")
@@ -908,6 +915,132 @@ async def submit_community_vote(request: Request, vote: CommunityVote):
     except Exception as e:
         logger.error(f"Error submitting community vote: {e}")
         raise HTTPException(status_code=500, detail="Failed to submit vote")
+
+
+# Innovation Voting Endpoints
+@app.post("/api/innovations/{innovation_id}/vote", response_model=InnovationVoteResponse)
+@limiter.limit("10/minute")
+async def submit_innovation_vote(
+    innovation_id: UUID, 
+    request: Request, 
+    vote_data: InnovationVoteCreate
+):
+    """Submit vote on whether innovation meets inclusion criteria"""
+    try:
+        from config.database import get_supabase
+        import hashlib
+
+        supabase = get_supabase()
+
+        # Verify innovation exists
+        innovation_response = supabase.table("innovations").select("id").eq("id", str(innovation_id)).execute()
+        if not innovation_response.data:
+            raise HTTPException(status_code=404, detail="Innovation not found")
+
+        # Create voter identifier for deduplication (hash email or IP)
+        client_ip = request.client.host
+        user_agent = request.headers.get("user-agent", "")
+        
+        if vote_data.voter_email:
+            voter_identifier = hashlib.sha256(vote_data.voter_email.encode()).hexdigest()
+        else:
+            voter_identifier = hashlib.sha256(f"{client_ip}:{user_agent}".encode()).hexdigest()
+
+        # Check if user has already voted on this innovation
+        existing_vote = supabase.table("innovation_votes").select("id").eq("innovation_id", str(innovation_id)).eq("voter_identifier", voter_identifier).execute()
+        
+        if existing_vote.data:
+            raise HTTPException(status_code=400, detail="You have already voted on this innovation")
+
+        # Create vote record
+        vote_record = {
+            "innovation_id": str(innovation_id),
+            "voter_identifier": voter_identifier,
+            "vote_type": vote_data.vote_type.value,
+            "comment": vote_data.comment,
+            "user_agent": user_agent[:500] if user_agent else None,
+            "ip_hash": hashlib.sha256(client_ip.encode()).hexdigest() if client_ip else None,
+        }
+
+        response = supabase.table("innovation_votes").insert(vote_record).execute()
+        
+        if not response.data:
+            raise HTTPException(status_code=500, detail="Failed to record vote")
+
+        created_vote = response.data[0]
+
+        # Update innovation verification status in background
+        from utils.voting_utils import update_innovation_verification_status
+        await update_innovation_verification_status(innovation_id)
+
+        return InnovationVoteResponse(
+            id=created_vote["id"],
+            innovation_id=created_vote["innovation_id"],
+            vote_type=created_vote["vote_type"],
+            comment=created_vote.get("comment"),
+            created_at=created_vote["created_at"]
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error submitting innovation vote: {e}")
+        raise HTTPException(status_code=500, detail="Failed to submit vote")
+
+
+@app.get("/api/innovations/{innovation_id}/votes", response_model=InnovationVotingStats)
+@limiter.limit("60/minute")
+async def get_innovation_voting_stats(innovation_id: UUID, request: Request):
+    """Get voting statistics for an innovation"""
+    try:
+        from config.database import get_supabase
+
+        supabase = get_supabase()
+
+        # Verify innovation exists
+        innovation_response = supabase.table("innovations").select("id, verification_status").eq("id", str(innovation_id)).execute()
+        if not innovation_response.data:
+            raise HTTPException(status_code=404, detail="Innovation not found")
+
+        # Get all votes for this innovation
+        votes_response = supabase.table("innovation_votes").select("vote_type").eq("innovation_id", str(innovation_id)).execute()
+        votes = votes_response.data if votes_response.data else []
+
+        # Count votes by type
+        yes_votes = len([v for v in votes if v["vote_type"] == "yes"])
+        no_votes = len([v for v in votes if v["vote_type"] == "no"])
+        need_more_info_votes = len([v for v in votes if v["vote_type"] == "need_more_info"])
+        total_votes = len(votes)
+
+        # Calculate confidence score for ML (simple algorithm for now)
+        if total_votes == 0:
+            confidence_score = 0.0
+        else:
+            # Confidence increases with more "yes" votes and total volume
+            yes_ratio = yes_votes / total_votes
+            volume_factor = min(1.0, total_votes / 10)  # Full confidence at 10+ votes
+            confidence_score = yes_ratio * volume_factor
+
+        # Determine verification status based on votes
+        from utils.voting_utils import compute_verification_status
+        current_status = innovation_response.data[0]["verification_status"]
+        computed_status = compute_verification_status(yes_votes, no_votes, need_more_info_votes, total_votes)
+
+        return InnovationVotingStats(
+            innovation_id=innovation_id,
+            total_votes=total_votes,
+            yes_votes=yes_votes,
+            no_votes=no_votes,
+            need_more_info_votes=need_more_info_votes,
+            confidence_score=round(confidence_score, 3),
+            verification_status=computed_status
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting innovation voting stats: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get voting stats")
 
 
 # Statistics Endpoints

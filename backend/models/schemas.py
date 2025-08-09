@@ -384,6 +384,41 @@ class ETLJobStatus(BaseModel):
     results_summary: Optional[Dict[str, Any]] = None
 
 
+# Innovation Voting Models
+class InnovationVoteType(str, Enum):
+    YES = "yes"
+    NO = "no" 
+    NEED_MORE_INFO = "need_more_info"
+
+
+class InnovationVoteCreate(BaseModel):
+    innovation_id: UUID
+    vote_type: InnovationVoteType
+    comment: Optional[str] = Field(None, max_length=500)
+    voter_email: Optional[EmailStr] = None  # Optional for anonymous voting
+
+
+class InnovationVoteResponse(BaseModel):
+    id: UUID
+    innovation_id: UUID
+    vote_type: InnovationVoteType
+    comment: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class InnovationVotingStats(BaseModel):
+    innovation_id: UUID
+    total_votes: int
+    yes_votes: int
+    no_votes: int
+    need_more_info_votes: int
+    confidence_score: float  # 0-1 score for ML training
+    verification_status: str  # Computed based on votes
+
+
 # Error Models
 class ErrorResponse(BaseModel):
     error: str
