@@ -4,11 +4,11 @@ Medical and health AI research scraper
 """
 
 import asyncio
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-import xmltodict
 from loguru import logger
 from pydantic import BaseModel
 from services.database_service import DatabaseService
@@ -223,16 +223,12 @@ class PubMedScraper:
         papers = []
 
         try:
-            data = xmltodict.parse(xml_content)
-            articles = data.get("PubmedArticleSet", {}).get("PubmedArticle", [])
-
-            # Handle single article case
-            if isinstance(articles, dict):
-                articles = [articles]
+            root = ET.fromstring(xml_content)
+            articles = root.findall("PubmedArticle")
 
             for article in articles:
                 try:
-                    paper = self._extract_paper_data(article)
+                    paper = self._extract_paper_data_from_xml(article)
                     if paper:
                         papers.append(paper)
                 except Exception as e:
@@ -244,107 +240,101 @@ class PubMedScraper:
 
         return papers
 
-    def _extract_paper_data(self, article: Dict) -> Optional[PubMedPaper]:
-        """Extract paper data from PubMed XML structure"""
+    def _extract_paper_data_from_xml(
+        self, article: ET.Element
+    ) -> Optional[PubMedPaper]:
+        """Extract paper data from PubMed XML structure using ElementTree"""
         try:
-            medline_citation = article.get("MedlineCitation", {})
-            pubmed_data = article.get("PubmedData", {})
+            medline_citation = article.find("MedlineCitation")
+            pubmed_data = article.find("PubmedData")
+
+            if medline_citation is None:
+                return None
 
             # PMID
-            pmid = medline_citation.get("PMID", {}).get("#text", "")
+            pmid_elem = medline_citation.find("PMID")
+            pmid = pmid_elem.text if pmid_elem is not None else ""
 
             # Article details
-            article_data = medline_citation.get("Article", {})
+            article_elem = medline_citation.find("Article")
+            if article_elem is None:
+                return None
 
             # Title
-            title = article_data.get("ArticleTitle", "")
-            if isinstance(title, dict):
-                title = title.get("#text", "")
+            title_elem = article_elem.find("ArticleTitle")
+            title = title_elem.text if title_elem is not None else ""
 
             # Abstract
-            abstract_data = article_data.get("Abstract", {})
+            abstract_elem = article_elem.find("Abstract")
             abstract_text = ""
-            if abstract_data:
-                abstract_parts = abstract_data.get("AbstractText", [])
-                if isinstance(abstract_parts, list):
-                    abstract_text = " ".join(
-                        [
-                            part.get("#text", "")
-                            if isinstance(part, dict)
-                            else str(part)
-                            for part in abstract_parts
-                        ]
-                    )
-                elif isinstance(abstract_parts, dict):
-                    abstract_text = abstract_parts.get("#text", "")
-                else:
-                    abstract_text = str(abstract_parts)
+            if abstract_elem is not None:
+                abstract_parts = abstract_elem.findall("AbstractText")
+                abstract_text = " ".join([part.text or "" for part in abstract_parts])
 
             # Authors
             authors = []
-            author_list = article_data.get("AuthorList", {}).get("Author", [])
-            if isinstance(author_list, dict):
-                author_list = [author_list]
+            author_list = article_elem.find("AuthorList")
+            if author_list is not None:
+                for author in author_list.findall("Author"):
+                    first_name_elem = author.find("ForeName")
+                    last_name_elem = author.find("LastName")
+                    first_name = (
+                        first_name_elem.text if first_name_elem is not None else ""
+                    )
+                    last_name = (
+                        last_name_elem.text if last_name_elem is not None else ""
+                    )
 
-            for author in author_list:
-                if isinstance(author, dict):
-                    first_name = author.get("ForeName", "")
-                    last_name = author.get("LastName", "")
                     if first_name and last_name:
                         authors.append(f"{first_name} {last_name}")
                     elif last_name:
                         authors.append(last_name)
 
             # Journal
-            journal_data = article_data.get("Journal", {})
-            journal = journal_data.get("Title", "") or journal_data.get(
-                "ISOAbbreviation", ""
-            )
+            journal_elem = article_elem.find("Journal")
+            journal = ""
+            if journal_elem is not None:
+                title_elem = journal_elem.find("Title")
+                iso_elem = journal_elem.find("ISOAbbreviation")
+                journal = (title_elem.text if title_elem is not None else "") or (
+                    iso_elem.text if iso_elem is not None else ""
+                )
 
             # Publication date
-            pub_date_data = journal_data.get("JournalIssue", {}).get("PubDate", {})
-            pub_date = self._parse_publication_date(pub_date_data)
+            pub_date = datetime.now()  # Default fallback
+            if journal_elem is not None:
+                journal_issue = journal_elem.find("JournalIssue")
+                if journal_issue is not None:
+                    pub_date_elem = journal_issue.find("PubDate")
+                    if pub_date_elem is not None:
+                        pub_date = self._parse_publication_date_from_xml(pub_date_elem)
 
             # DOI
             doi = None
-            article_ids = pubmed_data.get("ArticleIdList", {}).get("ArticleId", [])
-            if isinstance(article_ids, dict):
-                article_ids = [article_ids]
-
-            for article_id in article_ids:
-                if isinstance(article_id, dict) and article_id.get("@IdType") == "doi":
-                    doi = article_id.get("#text")
-                    break
+            if pubmed_data is not None:
+                article_id_list = pubmed_data.find("ArticleIdList")
+                if article_id_list is not None:
+                    for article_id in article_id_list.findall("ArticleId"):
+                        if article_id.get("IdType") == "doi":
+                            doi = article_id.text
+                            break
 
             # MeSH terms
             mesh_terms = []
-            mesh_list = medline_citation.get("MeshHeadingList", {}).get(
-                "MeshHeading", []
-            )
-            if isinstance(mesh_list, dict):
-                mesh_list = [mesh_list]
-
-            for mesh in mesh_list:
-                if isinstance(mesh, dict):
-                    descriptor = mesh.get("DescriptorName", {})
-                    if isinstance(descriptor, dict):
-                        term = descriptor.get("#text", "")
-                        if term:
-                            mesh_terms.append(term)
+            mesh_heading_list = medline_citation.find("MeshHeadingList")
+            if mesh_heading_list is not None:
+                for mesh_heading in mesh_heading_list.findall("MeshHeading"):
+                    descriptor = mesh_heading.find("DescriptorName")
+                    if descriptor is not None and descriptor.text:
+                        mesh_terms.append(descriptor.text)
 
             # Keywords
             keywords = []
-            keyword_list = medline_citation.get("KeywordList", {}).get("Keyword", [])
-            if isinstance(keyword_list, dict):
-                keyword_list = [keyword_list]
-
-            for keyword in keyword_list:
-                if isinstance(keyword, dict):
-                    keyword_text = keyword.get("#text", "")
-                    if keyword_text:
-                        keywords.append(keyword_text)
-                elif isinstance(keyword, str):
-                    keywords.append(keyword)
+            keyword_list = medline_citation.find("KeywordList")
+            if keyword_list is not None:
+                for keyword in keyword_list.findall("Keyword"):
+                    if keyword.text:
+                        keywords.append(keyword.text)
 
             # URL
             url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
@@ -366,32 +356,47 @@ class PubMedScraper:
             logger.error(f"Error extracting paper data: {e}")
             return None
 
-    def _parse_publication_date(self, pub_date_data: Dict) -> datetime:
-        """Parse publication date from various PubMed formats"""
+    def _parse_publication_date_from_xml(self, pub_date_elem: ET.Element) -> datetime:
+        """Parse publication date from PubMed XML format"""
         try:
-            year = pub_date_data.get("Year", datetime.now().year)
-            month = pub_date_data.get("Month", 1)
-            day = pub_date_data.get("Day", 1)
+            year_elem = pub_date_elem.find("Year")
+            month_elem = pub_date_elem.find("Month")
+            day_elem = pub_date_elem.find("Day")
 
-            # Handle month names
-            if isinstance(month, str):
-                month_map = {
-                    "Jan": 1,
-                    "Feb": 2,
-                    "Mar": 3,
-                    "Apr": 4,
-                    "May": 5,
-                    "Jun": 6,
-                    "Jul": 7,
-                    "Aug": 8,
-                    "Sep": 9,
-                    "Oct": 10,
-                    "Nov": 11,
-                    "Dec": 12,
-                }
-                month = month_map.get(month[:3], 1)
+            year = (
+                int(year_elem.text)
+                if year_elem is not None and year_elem.text
+                else datetime.now().year
+            )
+            month = 1
+            day = 1
 
-            return datetime(int(year), int(month), int(day))
+            if month_elem is not None and month_elem.text:
+                month_text = month_elem.text
+                # Handle month names
+                if month_text.isdigit():
+                    month = int(month_text)
+                else:
+                    month_map = {
+                        "Jan": 1,
+                        "Feb": 2,
+                        "Mar": 3,
+                        "Apr": 4,
+                        "May": 5,
+                        "Jun": 6,
+                        "Jul": 7,
+                        "Aug": 8,
+                        "Sep": 9,
+                        "Oct": 10,
+                        "Nov": 11,
+                        "Dec": 12,
+                    }
+                    month = month_map.get(month_text[:3], 1)
+
+            if day_elem is not None and day_elem.text:
+                day = int(day_elem.text)
+
+            return datetime(year, month, day)
 
         except Exception:
             return datetime.now()

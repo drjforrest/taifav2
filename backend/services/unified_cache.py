@@ -141,6 +141,10 @@ class UnifiedCacheService:
             # Positive results - cache successful responses longer
             (DataSource.PERPLEXITY, CacheType.POSITIVE): 24,
             (DataSource.SERPER, CacheType.POSITIVE): 12,
+            (
+                DataSource.SERPAPI,
+                CacheType.POSITIVE,
+            ): 48,  # Scholar data is stable, cache longer
             (DataSource.WEB_SCRAPING, CacheType.POSITIVE): 6,
             (DataSource.GITHUB_API, CacheType.POSITIVE): 4,
             (
@@ -153,6 +157,7 @@ class UnifiedCacheService:
             # Negative results - shorter cache times for retries
             (DataSource.PERPLEXITY, CacheType.NEGATIVE): 4,
             (DataSource.SERPER, CacheType.NEGATIVE): 2,
+            (DataSource.SERPAPI, CacheType.NEGATIVE): 12,  # Scholar null results stable
             (DataSource.WEB_SCRAPING, CacheType.NEGATIVE): 6,
             (DataSource.GITHUB_API, CacheType.NEGATIVE): 1,
             (DataSource.ARXIV_API, CacheType.NEGATIVE): 8,

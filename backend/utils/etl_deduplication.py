@@ -16,7 +16,6 @@ from services.database_service import db_service
 from services.deduplication_service import (
     DuplicateAction,
     DuplicateMatch,
-    DuplicateType,
     dedup_service,
 )
 

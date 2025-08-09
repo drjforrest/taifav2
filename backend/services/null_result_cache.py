@@ -37,6 +37,7 @@ class DataSource(Enum):
 
     PERPLEXITY = "perplexity"
     SERPER = "serper"
+    SERPAPI = "serpapi"
     WEB_SCRAPING = "web_scraping"
     GITHUB_API = "github_api"
     ARXIV_API = "arxiv_api"
