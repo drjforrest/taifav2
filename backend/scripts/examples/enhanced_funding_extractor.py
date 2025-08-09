@@ -185,6 +185,36 @@ class EnhancedFundingExtractor:
                 r'under\s+\d+', r'age\s+\d+', r'young\s+professionals?'
             ]
         }
+        
+        # Market sizing patterns - NEW ADDITION
+        self.market_size_patterns = {
+            'TAM': [
+                r'(?:total\s+addressable\s+market|TAM).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:total\s+market\s+size).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:market\s+worth).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+            ],
+            'SAM': [
+                r'(?:serviceable\s+addressable\s+market|SAM).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:serviceable\s+market).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:available\s+market).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+            ],
+            'SOM': [
+                r'(?:serviceable\s+obtainable\s+market|SOM).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:share\s+of\s+market).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:target\s+market\s+share).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+            ],
+            'market_opportunity': [
+                r'(?:market\s+opportunity).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:addressable\s+opportunity).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:business\s+opportunity).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:revenue\s+opportunity).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+            ],
+            'sector_size': [
+                r'(?:industry\s+size|sector\s+size).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:market\s+value).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+                r'(?:industry\s+worth).*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)',
+            ]
+        }
 
     def extract_funding_info(self, text: str) -> Dict[str, Any]:
         """
@@ -204,6 +234,7 @@ class EnhancedFundingExtractor:
             'process_info': self._extract_process_info(text),
             'focus_indicators': self._extract_focus_indicators(text_lower),
             'project_details': self._extract_project_details(text_lower),
+            'market_sizing': self._extract_market_sizing(text_lower),  # NEW: Market sizing extraction
         })
         
         return funding_info
@@ -444,6 +475,52 @@ class EnhancedFundingExtractor:
         
         return details
 
+    def _extract_market_sizing(self, text: str) -> Dict[str, Any]:
+        """Extract market sizing information from text"""
+        market_data = {}
+        
+        for market_type, patterns in self.market_size_patterns.items():
+            for pattern in patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match:
+                    groups = match.groups()
+                    currency_symbol = groups[0].strip() if groups[0] else '$'
+                    amount_str = groups[1] if len(groups) > 1 else None
+                    multiplier = groups[2] if len(groups) > 2 and groups[2] else None
+                    
+                    if amount_str:
+                        amount = self._parse_amount(amount_str, multiplier)
+                        currency = self._parse_currency(currency_symbol)
+                        
+                        market_data[market_type] = {
+                            'value': amount,
+                            'currency': currency,
+                            'raw_text': match.group(),
+                            'confidence': 0.8  # High confidence for explicit market size mentions
+                        }
+                        break
+        
+        # If no explicit market size found, try generic market references
+        if not market_data:
+            generic_patterns = [
+                r'(?:billion|trillion)\s+dollar\s+(?:industry|market|sector)',
+                r'(?:multi-billion|multi-trillion)\s+(?:industry|market|sector)',
+                r'(?:growing|expanding)\s+market.*?(\d+)%',
+                r'market\s+expected\s+to\s+reach.*?([€$£¥]?\s*\d+(?:[.,]\d+)?)\s*(billion|million|trillion|b|m|t)'
+            ]
+            
+            for pattern in generic_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match:
+                    market_data['market_opportunity'] = {
+                        'raw_text': match.group(),
+                        'confidence': 0.4,  # Lower confidence for implicit references
+                        'notes': 'Generic market reference found'
+                    }
+                    break
+        
+        return market_data
+
     def _parse_amount(self, amount_str: str, multiplier: str = None) -> float:
         """Parse amount string to numeric value"""
         if not amount_str:
@@ -548,6 +625,9 @@ class EnhancedETLPipeline:
             'collaboration_required': funding_info.get('focus_indicators', {}).get('collaboration_required'),
             'gender_focused': funding_info.get('focus_indicators', {}).get('gender_focused'),
             'youth_focused': funding_info.get('focus_indicators', {}).get('youth_focused'),
+            
+            # NEW: Market sizing data
+            'market_sizing': funding_info.get('market_sizing', {}),
             
             # Standard metadata
             'status': 'active',

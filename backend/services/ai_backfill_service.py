@@ -188,6 +188,18 @@ class AIBackfillService:
                 )
             )
 
+        # NEW: Market sizing data - High priority for comprehensive innovation profiles
+        if not innovation.get("market_sizing") or not innovation.get("market_sizing", {}):
+            missing_fields.append(
+                MissingField(
+                    field_name="market_sizing",
+                    field_type="market_data",
+                    priority=BackfillPriority.HIGH,
+                    search_strategy="perplexity",
+                    estimated_cost=0.12,
+                )
+            )
+
         # Low priority missing fields
         if not innovation.get("demo_url"):
             missing_fields.append(
@@ -534,6 +546,26 @@ class AIBackfillService:
             """
             )
 
+        elif field.field_type == "market_data":
+            return (
+                base_context
+                + """
+            
+            Please focus on:
+            - Total Addressable Market (TAM) size and projections
+            - Serviceable Addressable Market (SAM) estimates  
+            - Serviceable Obtainable Market (SOM) potential
+            - Market growth rates and trends
+            - Competitive landscape and market position
+            - Revenue models and monetization strategies
+            - Customer segments and market penetration
+            - Industry analysis and sector-specific data
+            
+            Provide specific market size figures in billions/millions with currency.
+            Include growth percentages and market projections when available.
+            """
+            )
+
         return (
             base_context
             + f"\nPlease provide detailed, factual information about {field.field_name}."
@@ -566,6 +598,11 @@ class AIBackfillService:
         elif field.field_type == "metrics":
             return (
                 f'"{innovation_name}" AND (users OR customers OR downloads OR revenue)'
+            )
+
+        elif field.field_type == "market_data":
+            return (
+                f'"{innovation_name}" AND (market size OR TAM OR SAM OR "billion market" OR "market opportunity")'
             )
 
         return f'"{innovation_name}" {field.field_name}'

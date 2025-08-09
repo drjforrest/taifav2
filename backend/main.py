@@ -17,6 +17,7 @@ from api.data_intelligence import router as data_intelligence_router
 from api.enhanced_data_completeness import router as enhanced_data_completeness_router
 from api.entity_relationships import router as entity_relationships_router
 from api.etl_live import router as etl_live_router
+from api.funding_enrichment import router as funding_enrichment_router  # NEW: Funding enrichment API
 from api.longitudinal_intelligence import router as longitudinal_intelligence_router
 from api.trends import router as trends_router
 from config.settings import settings
@@ -95,6 +96,7 @@ app.include_router(ai_assistant_router)
 app.include_router(trends_router)
 app.include_router(entity_relationships_router)
 app.include_router(longitudinal_intelligence_router)
+app.include_router(funding_enrichment_router)  # NEW: Funding enrichment endpoints
 
 
 @app.on_event("startup")

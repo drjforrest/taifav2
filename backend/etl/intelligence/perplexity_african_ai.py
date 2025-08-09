@@ -159,7 +159,7 @@ class PerplexityAfricanAIModule:
 
         elif intel_type == IntelligenceType.FUNDING_LANDSCAPE:
             return base_context + """
-            MISSION: Analyze investment flows, funding rounds, and financial developments in African AI.
+            MISSION: Analyze investment flows, funding rounds, financial developments and market sizing in African AI.
 
             Please provide:
             1. Recent funding rounds with specific amounts and investors
@@ -168,8 +168,12 @@ class PerplexityAfricanAIModule:
             4. International investment in African AI
             5. Valuation trends and market dynamics
             6. Notable acquisitions or partnerships
+            7. Market size data (TAM, SAM, SOM) for African AI sectors
+            8. Industry growth projections and market opportunities
+            9. Revenue models and business model innovations
 
-            Include exact funding amounts, investor names, and deal structures when available.
+            Include exact funding amounts, investor names, deal structures, and market size figures when available.
+            Focus on quantifiable market data including billion/million dollar market opportunities.
             """
 
         elif intel_type == IntelligenceType.RESEARCH_BREAKTHROUGH:
@@ -200,6 +204,26 @@ class PerplexityAfricanAIModule:
             6. Public-private partnership announcements
 
             Include specific policy details and implementation timelines.
+            """
+
+        elif intel_type == IntelligenceType.MARKET_ANALYSIS:
+            return base_context + """
+            MISSION: Conduct comprehensive market analysis for African AI sectors and opportunities.
+
+            Please provide:
+            1. Market size data (TAM, SAM, SOM) for key AI sectors in Africa
+            2. Growth rates and market projections for the next 3-5 years
+            3. Revenue models and monetization strategies being used
+            4. Competitive landscape and market leaders
+            5. Market entry barriers and opportunities
+            6. Customer adoption patterns and market penetration
+            7. Pricing models and cost structures
+            8. Distribution channels and go-to-market strategies
+            9. Market trends and emerging opportunities
+            10. Regional market variations across African countries
+
+            Focus on quantifiable data including billion/million dollar market sizes, growth percentages,
+            and specific revenue figures. Include sector-specific analysis (FinTech, HealthTech, AgriTech, etc.).
             """
 
         else:
