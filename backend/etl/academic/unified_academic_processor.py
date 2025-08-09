@@ -16,8 +16,7 @@ from loguru import logger
 from .arxiv_scraper import ArxivScraper
 from .pubmed_scraper import PubMedScraper
 from .systematic_review_processor import SystematicReviewProcessor
-
-# Note: Google Scholar scraper to be integrated when available
+from services.serpapi_service import SerpAPIService  # Google Scholar via SerpAPI
 
 
 class UnifiedAcademicProcessor:
@@ -139,11 +138,53 @@ class UnifiedAcademicProcessor:
             return standardized_papers
 
     async def process_scholar_papers(self, max_results: int) -> List[Dict[str, Any]]:
-        """Process Google Scholar papers - temporarily disabled pending ETL integration"""
-        logger.info(
-            "Google Scholar processing temporarily disabled - awaiting ETL integration"
-        )
-        return []  # Return empty list until Google Scholar ETL module is integrated
+        """Process Google Scholar papers via SerpAPI"""
+        async with SerpAPIService() as serpapi:
+            # Search for African AI research papers
+            scholar_results = await serpapi.search_african_ai_research(
+                innovation_type=None,  # General AI research
+                country=None,  # All African countries
+                year_from=2020,  # Recent papers
+                num_results=max_results
+            )
+            
+            standardized_papers = []
+            for result in scholar_results:
+                try:
+                    # Convert SerpAPI Scholar result to paper format
+                    paper_data = {
+                        'title': result.title,
+                        'authors': result.authors or [],
+                        'abstract': result.snippet,
+                        'journal': result.publication or '',
+                        'year': result.year,
+                        'publication_date': None,  # Not available from Scholar
+                        'doi': '',  # Not available from Scholar
+                        'url': str(result.link) if result.link else '',
+                        'pdf_url': '',  # Not available from Scholar
+                        'citation_count': result.cited_by or 0,
+                        'african_relevance_score': self._calculate_scholar_african_relevance(result),
+                        'ai_relevance_score': self._calculate_scholar_ai_relevance(result),
+                        'african_entities': self._extract_african_entities_from_text(f"{result.title} {result.snippet}"),
+                        'keywords': self._extract_keywords_from_text(f"{result.title} {result.snippet}"),
+                        'categories': [],
+                        'project_domain': '',
+                        'funding_source': '',
+                        'ai_techniques': '',
+                        'geographic_scope': '',
+                        'key_outcomes': '',
+                        'data_type': 'Academic Paper'
+                    }
+                    
+                    standardized = self.standardize_paper_format(paper_data, "google_scholar")
+                    if standardized:
+                        standardized_papers.append(standardized)
+                        
+                except Exception as e:
+                    logger.error(f"Error processing Scholar result: {e}")
+                    continue
+                    
+            return standardized_papers
 
     def standardize_paper_format(
         self, paper: Dict[str, Any], source: str

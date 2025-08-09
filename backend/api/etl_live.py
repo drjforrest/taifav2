@@ -590,18 +590,21 @@ async def run_academic_pipeline(days_back: int = 3, max_results: int = 10):
                         "id": str(uuid4()),
                         "title": paper.title,
                         "abstract": paper.abstract,
-                        "authors": paper.authors,
+                        # Note: 'authors' field doesn't exist in publications table schema
+                        # It should be handled via publication_authors relationship table
+                        "publication_type": "preprint",
                         "publication_date": paper.published_date.date().isoformat(),
-                        "updated_date": paper.updated_date.date().isoformat()
-                        if paper.updated_date
-                        else None,
+                        "year": paper.published_date.year if paper.published_date else None,
                         "url": paper.url,
+                        "venue": "arXiv",
                         "source": "arxiv",
                         "source_id": paper.arxiv_id,
                         "keywords": paper.keywords,
                         "african_relevance_score": paper.african_relevance_score,
-                        "ai_relevance_score": 0.8,  # Assume high AI relevance for ArXiv AI papers
+                        "ai_relevance_score": paper.ai_relevance_score,
+                        "african_entities": paper.african_entities,
                         "verification_status": "pending",
+                        "data_type": "Academic Paper",
                     }
 
                     supabase.table("publications").insert(paper_data).execute()
@@ -639,38 +642,92 @@ async def run_academic_pipeline(days_back: int = 3, max_results: int = 10):
 
 
 async def run_discovery_pipeline(query: str):
-    """Background task for innovation discovery with comprehensive metrics"""
+    """Background task for web innovation discovery using Serper.dev with comprehensive metrics"""
     start_time = time.time()
     try:
-        logger.info(f"Starting discovery pipeline with query: {query}")
+        logger.info(f"Starting Serper discovery pipeline with query: {query}")
 
-        # Perform vector search
-        vector_service = await get_vector_service()
-        results = await vector_service.search_similar(query, top_k=10)
-
-        logger.info(f"Discovery pipeline found {len(results)} results")
+        # Use Serper service to discover new innovation data from the web
+        from services.serper_service import SerperService
+        
+        # Track metrics
+        items_processed = 0
+        items_failed = 0
+        duplicates_removed = 0
+        
+        async with SerperService() as serper:
+            # Search for African innovation content using Serper API
+            search_results = await serper.search(
+                query=f"{query} African innovation technology startup AI",
+                country="any",  # Focus on African content but don't restrict geographically
+                num_results=20  # Limit to avoid rate limits
+            )
+            
+            logger.info(f"Serper discovery found {len(search_results)} potential innovations")
+            
+            # Process and store results in database
+            if search_results:
+                supabase = get_supabase()
+                
+                for result in search_results:
+                    try:
+                        # Extract relevant innovation data from search result
+                        innovation_data = {
+                            "id": str(uuid4()),
+                            "title": result.title[:200] if result.title else "Unknown Innovation",
+                            "abstract": result.snippet[:500] if result.snippet else "",
+                            "url": result.link,
+                            "source": result.displayed_link or "serper",
+                            "source_id": f"serper_{hash(result.link)}",
+                            "publication_type": "web_content",
+                            "data_type": "Innovation Discovery",
+                            "verification_status": "pending",
+                            "publication_date": datetime.now().date().isoformat(),
+                            "year": datetime.now().year,
+                            "keywords": [query] if query else [],
+                            "african_relevance_score": 0.7,  # Default high since we're searching for African content
+                            "ai_relevance_score": 0.6,  # Default moderate AI relevance
+                            "african_entities": [],  # Could be enhanced with NER
+                        }
+                        
+                        # Check for duplicates by URL
+                        existing = supabase.table("publications").select("id").eq("url", result.link).execute()
+                        
+                        if existing.data:
+                            duplicates_removed += 1
+                            continue
+                            
+                        # Insert new discovery
+                        supabase.table("publications").insert(innovation_data).execute()
+                        items_processed += 1
+                        
+                    except Exception as insert_error:
+                        logger.warning(f"Error inserting discovery result {result.title}: {insert_error}")
+                        items_failed += 1
 
         # Calculate metrics
         runtime = time.time() - start_time
         metrics = ETLMetrics(
-            batch_size=10,  # top_k parameter
-            duplicates_removed=0,  # Vector search handles deduplication
+            batch_size=len(search_results) if 'search_results' in locals() else 0,
+            duplicates_removed=duplicates_removed,
             processing_time_ms=int(runtime * 1000),
-            success_rate=100.0,  # Vector search typically succeeds
-            items_processed=len(results),
-            items_failed=0,
+            success_rate=100.0
+            if items_failed == 0
+            else (items_processed / (items_processed + items_failed)) * 100,
+            items_processed=items_processed,
+            items_failed=items_failed,
         )
 
         # Complete job with metrics
         etl_monitor.complete_job(
-            "serper_pipeline", True, runtime, len(results), metrics=metrics
+            "serper_pipeline", True, runtime, items_processed, metrics=metrics
         )
 
-        logger.info("Discovery pipeline completed successfully")
+        logger.info(f"Serper discovery pipeline completed successfully: {items_processed} new innovations discovered")
 
     except Exception as e:
         runtime = time.time() - start_time
-        logger.error(f"Discovery pipeline error: {e}")
+        logger.error(f"Serper discovery pipeline error: {e}")
         etl_monitor.complete_job("serper_pipeline", False, runtime, 0, str(e))
 
 

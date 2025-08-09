@@ -14,6 +14,7 @@ from api.ai_assistant import router as ai_assistant_router
 from api.analytics import router as analytics_router
 from api.data_completeness import router as data_completeness_router
 from api.data_intelligence import router as data_intelligence_router
+from api.deduplication import router as deduplication_router
 from api.enhanced_data_completeness import router as enhanced_data_completeness_router
 from api.entity_relationships import router as entity_relationships_router
 from api.etl_live import router as etl_live_router
@@ -99,6 +100,7 @@ app.include_router(trends_router)
 app.include_router(entity_relationships_router)
 app.include_router(longitudinal_intelligence_router)
 app.include_router(funding_enrichment_router)  # NEW: Funding enrichment endpoints
+app.include_router(deduplication_router)  # NEW: Cross-table deduplication endpoints
 
 
 @app.on_event("startup")
@@ -174,22 +176,118 @@ async def get_dashboard_stats(request: Request):
 
         supabase = get_supabase()
 
-        # Get counts from different tables
-        innovations_response = (
-            supabase.table("innovations").select("id", count="exact").execute()
-        )
+        # Get unified counts from publications table (all data sources)
+        # Count total publications
         publications_response = (
             supabase.table("publications").select("id", count="exact").execute()
         )
-        organizations_response = (
-            supabase.table("organizations").select("id", count="exact").execute()
+        
+        # Count innovations from multiple sources (with graceful handling of duplicate_metadata column)
+        # 1. Static innovations table (exclude duplicates if column exists)
+        try:
+            static_innovations_response = (
+                supabase.table("innovations")
+                .select("id", count="exact")
+                .is_("duplicate_metadata", "null")  # Exclude duplicates
+                .execute()
+            )
+        except Exception:
+            # Fallback if duplicate_metadata column doesn't exist
+            static_innovations_response = (
+                supabase.table("innovations")
+                .select("id", count="exact")
+                .execute()
+            )
+        
+        # 2. Innovation discoveries from web scraping (exclude duplicates if column exists)
+        try:
+            discovery_innovations_response = (
+                supabase.table("publications")
+                .select("id", count="exact")
+                .eq("data_type", "Innovation Discovery")
+                .is_("duplicate_metadata", "null")  # Exclude duplicates
+                .execute()
+            )
+        except Exception:
+            # Fallback if duplicate_metadata column doesn't exist
+            discovery_innovations_response = (
+                supabase.table("publications")
+                .select("id", count="exact")
+                .eq("data_type", "Innovation Discovery")
+                .execute()
+            )
+        
+        # 3. Academic papers about innovations/applications (exclude duplicates if column exists)
+        try:
+            academic_innovations_response = (
+                supabase.table("publications")
+                .select("id", count="exact")
+                .eq("data_type", "Academic Paper")
+                .gte("ai_relevance_score", 0.7)  # High AI relevance = likely innovation/application
+                .is_("duplicate_metadata", "null")  # Exclude duplicates
+                .execute()
+            )
+        except Exception:
+            # Fallback if duplicate_metadata column doesn't exist
+            academic_innovations_response = (
+                supabase.table("publications")
+                .select("id", count="exact")
+                .eq("data_type", "Academic Paper")
+                .gte("ai_relevance_score", 0.7)  # High AI relevance = likely innovation/application
+                .execute()
+            )
+        
+        # 4. High-relevance news articles about innovations (from separate articles table, exclude duplicates)
+        try:
+            news_innovations_response = (
+                supabase.table("articles")
+                .select("id", count="exact")
+                .gte("ai_relevance_score", 0.6)  # High AI relevance news about innovations
+                .gte("african_relevance_score", 0.5)  # Must be Africa-focused
+                .is_("duplicate_metadata", "null")  # Exclude duplicates
+                .execute()
+            )
+            news_count = news_innovations_response.count or 0
+        except Exception:
+            # Fallback for articles table or duplicate_metadata column issues
+            try:
+                news_innovations_response = (
+                    supabase.table("articles")
+                    .select("id", count="exact")
+                    .gte("ai_relevance_score", 0.6)  # High AI relevance news about innovations
+                    .gte("african_relevance_score", 0.5)  # Must be Africa-focused
+                    .execute()
+                )
+                news_count = news_innovations_response.count or 0
+            except Exception:
+                # If articles table doesn't exist or has other issues, continue without it
+                news_count = 0
+        
+        # Calculate total innovations count (all non-duplicates)
+        total_innovations = (
+            (static_innovations_response.count or 0) +
+            (discovery_innovations_response.count or 0) +
+            (academic_innovations_response.count or 0) +
+            news_count
         )
-        individuals_response = (
-            supabase.table("individuals")
-            .select("id", count="exact")
-            .eq("verification_status", "verified")
-            .execute()
-        )
+        
+        # Get organization and individual counts (fallback gracefully)
+        try:
+            organizations_response = (
+                supabase.table("organizations").select("id", count="exact").execute()
+            )
+        except:
+            organizations_response = type('obj', (object,), {'count': 0})
+            
+        try:
+            individuals_response = (
+                supabase.table("individuals")
+                .select("id", count="exact")
+                .eq("verification_status", "verified")
+                .execute()
+            )
+        except:
+            individuals_response = type('obj', (object,), {'count': 0})
 
         # Get detailed innovations data for analysis (use basic fields only)
         innovations_data = (
@@ -295,7 +393,7 @@ async def get_dashboard_stats(request: Request):
 
         return {
             # Core counts
-            "total_innovations": innovations_response.count or 0,
+            "total_innovations": total_innovations,
             "total_publications": publications_response.count or 0,
             "total_organizations": organizations_response.count or 0,
             "verified_individuals": individuals_response.count or 0,
@@ -320,7 +418,7 @@ async def get_dashboard_stats(request: Request):
             if scores_count > 0
             else 0,
             "verification_rate": round(
-                verified_count / max(1, innovations_response.count or 0) * 100, 1
+                verified_count / max(1, static_innovations_response.count or 0) * 100, 1
             ),
             # Funding analysis
             "total_funding": total_funding,

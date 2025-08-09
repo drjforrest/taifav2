@@ -413,7 +413,7 @@ async def scrape_arxiv_papers(days_back: int = 7, max_results: int = 100) -> Lis
     """Main function to scrape ArXiv papers with monitoring"""
     from services.etl_context import ETLJobContext
 
-    with ETLJobContext("arxiv_scraper") as job:
+    with ETLJobContext("academic_pipeline") as job:
         try:
             async with ArxivScraper() as scraper:
                 papers = await scraper.scrape_recent_papers(days_back, max_results)

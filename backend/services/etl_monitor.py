@@ -90,8 +90,11 @@ class ETLMonitor:
         """Initialize known ETL jobs with enhanced tracking"""
         jobs = {
             "academic_pipeline": "Academic publication discovery (ArXiv, PubMed)",
+            "arxiv_scraper": "ArXiv paper scraping (legacy - redirects to academic_pipeline)",  # For backward compatibility
             "news_pipeline": "Innovation news monitoring (RSS feeds)",
+            "news_monitor": "RSS news monitoring (legacy - redirects to news_pipeline)",  # For backward compatibility
             "serper_pipeline": "Web search for AI projects and startups",
+            "serper_search": "Serper search (legacy - redirects to serper_pipeline)",  # For backward compatibility
             "enrichment_pipeline": "AI intelligence enrichment (Perplexity, OpenAI)",
             "crawl4ai": "Project website analysis and content extraction",
             "startup_tracker": "Startup database monitoring and updates",
