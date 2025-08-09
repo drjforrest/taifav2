@@ -146,8 +146,28 @@ class NullResultCache:
 
     async def __aenter__(self):
         """Async context manager entry"""
-        self.redis = await aioredis.from_url(self.redis_url, decode_responses=True)
-        return self
+        try:
+            self.redis = await aioredis.from_url(self.redis_url, decode_responses=True)
+            # Test the connection
+            await self.redis.ping()
+            return self
+        except Exception as e:
+            logger.error(f"Failed to connect to Redis at {self.redis_url}: {e}")
+            # If connection fails, try without authentication for dev environments
+            if "@" in self.redis_url:
+                # Remove auth from URL and try again
+                base_url = self.redis_url.split("://")[0] + "://" + self.redis_url.split("@")[1]
+                logger.info(f"Retrying Redis connection without auth: {base_url}")
+                try:
+                    self.redis = await aioredis.from_url(base_url, decode_responses=True)
+                    await self.redis.ping()
+                    logger.info("Successfully connected to Redis without authentication")
+                    return self
+                except Exception as e2:
+                    logger.error(f"Failed to connect to Redis without auth: {e2}")
+                    raise e  # Re-raise original error
+            else:
+                raise e
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit"""

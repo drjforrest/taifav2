@@ -78,7 +78,10 @@ class UnifiedETLStatus:
 
 class ETLMonitor:
     def __init__(self):
-        self.status_file = Path("backend/data/etl_status.json")
+        # Use absolute path to ensure it works regardless of working directory
+        import os
+        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.status_file = Path(script_dir) / "data" / "etl_status.json"
         self.job_statuses: Dict[str, ETLJobStatus] = {}
         self.initialize_jobs()
         self.load_status()

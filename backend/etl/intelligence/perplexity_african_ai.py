@@ -239,7 +239,7 @@ class PerplexityAfricanAIModule:
         # Create cache key parameters
         cache_params = {
             'prompt': prompt,
-            'model': "llama-3.1-sonar-large-128k-online",
+            'model': "sonar-pro",
             'temperature': 0.2,
             'max_tokens': 4000
         }
@@ -262,7 +262,7 @@ class PerplexityAfricanAIModule:
             logger.warning(f"Error checking null cache: {e}")
 
         payload = {
-            "model": "llama-3.1-sonar-large-128k-online",
+            "model": "sonar-pro",
             "messages": [
                 {
                     "role": "system",
