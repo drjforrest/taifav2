@@ -29,15 +29,15 @@ export class MockDataService {
           enrichment_fields_completeness: 58.2
         },
         innovations: {
-          total_records: 24,
+          total_records: 78,
           completeness_matrix: [
             { title: true, description: true, ai_techniques_used: false },
             { title: true, description: true, ai_techniques_used: true }
           ],
           field_completeness: {
-            title: { completeness_percentage: 100, complete_records: 24, missing_records: 0, field_type: 'core' },
-            description: { completeness_percentage: 95, complete_records: 23, missing_records: 1, field_type: 'core' },
-            ai_techniques_used: { completeness_percentage: 45, complete_records: 11, missing_records: 13, field_type: 'enrichment' }
+            title: { completeness_percentage: 100, complete_records: 78, missing_records: 0, field_type: 'core' },
+            description: { completeness_percentage: 95, complete_records: 74, missing_records: 4, field_type: 'core' },
+            ai_techniques_used: { completeness_percentage: 45, complete_records: 35, missing_records: 43, field_type: 'enrichment' }
           },
           overall_completeness: 81.2,
           core_fields_completeness: 97.5,
@@ -66,9 +66,10 @@ export class MockDataService {
       analysis_timestamp: new Date().toISOString(),
       summary: {
         tables_analyzed: 3,
-        total_records_analyzed: 125,
+        total_records_analyzed: 179,
         intelligence_table_exists: true
-      }
+      },
+      _isMockData: true
     };
   }
 

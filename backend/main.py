@@ -582,8 +582,8 @@ async def get_innovations(
                     traditional_query = traditional_query.eq(
                         "verification_status", verification_status
                     )
-                if country:
-                    traditional_query = traditional_query.eq("country", country)
+                # Note: country filtering not available for innovations table directly
+                # Country data would need to be derived from related organizations
 
                 traditional_response = traditional_query.limit(50).execute()
                 traditional_results = (
@@ -672,8 +672,8 @@ async def get_innovations(
                 query_builder = query_builder.eq(
                     "verification_status", verification_status
                 )
-            if country:
-                query_builder = query_builder.eq("country", country)
+            # Note: country filtering not available for innovations table directly
+            # Country data would need to be derived from related organizations
 
             # Get total count
             count_query = supabase.table("innovations").select("id", count="exact")
@@ -681,8 +681,7 @@ async def get_innovations(
                 count_query = count_query.eq("innovation_type", innovation_type)
             if verification_status:
                 count_query = count_query.eq("verification_status", verification_status)
-            if country:
-                count_query = count_query.eq("country", country)
+            # Note: country filtering not available for innovations table directly
 
             count_response = count_query.execute()
             total = count_response.count if count_response.count is not None else 0

@@ -29,6 +29,7 @@ export interface MissingDataMap {
     total_records_analyzed: number;
     intelligence_table_exists: boolean;
   };
+  _isMockData?: boolean;
 }
 
 export interface CriticalGap {

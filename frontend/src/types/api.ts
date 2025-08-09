@@ -162,6 +162,7 @@ export interface ETLStatus {
     discovery_pipeline?: ETLMetrics;
     enrichment_pipeline?: ETLMetrics;
   };
+  _isMockData?: boolean;
 }
 
 export interface ETLHealth {

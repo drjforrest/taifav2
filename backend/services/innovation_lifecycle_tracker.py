@@ -398,10 +398,10 @@ class InnovationLifecycleTracker:
     ) -> Dict[str, Any]:
         """Get analytics on innovation lifecycles across the platform"""
         try:
-            # Build base query for lifecycle data
+            # Build base query for lifecycle data - Note: country is not in innovations table
             query = (
                 self.supabase.table("innovation_lifecycles")
-                .select("*, innovations(country, innovation_type)")
+                .select("*, innovations(innovation_type, title, id)")
                 .eq("innovations.visibility", "public")
             )
 
@@ -455,8 +455,7 @@ class InnovationLifecycleTracker:
                 # Get innovation details if available
                 if record.get("innovations"):
                     innovation = record["innovations"]
-                    if innovation.get("country"):
-                        country_counts[innovation["country"]] += 1
+                    # Note: country is not available in innovations table directly
                     if innovation.get("innovation_type"):
                         innovation_type_counts[innovation["innovation_type"]] += 1
 
@@ -509,17 +508,17 @@ class InnovationLifecycleTracker:
     ) -> Dict[str, Any]:
         """Analyze time-to-market metrics across innovations"""
         try:
-            # Get all innovations with their lifecycles
+            # Get all innovations with their lifecycles - Note: country is not in innovations table
             query = (
                 self.supabase.table("innovations")
                 .select(
-                    "id, creation_date, country, innovation_type, innovation_lifecycles(*)"
+                    "id, creation_date, innovation_type, innovation_lifecycles(*)"
                 )
                 .eq("visibility", "public")
             )
 
-            if country:
-                query = query.eq("country", country)
+            # Note: country filtering would require joining with organizations
+            # For now, we skip country filtering as it's not directly available
 
             if innovation_type:
                 query = query.eq("innovation_type", innovation_type)
