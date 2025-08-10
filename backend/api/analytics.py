@@ -7,7 +7,8 @@ Provides analytics data for the dashboard including charts, metrics, and trends.
 
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Any
+import json
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
@@ -19,6 +20,18 @@ from slowapi.util import get_remote_address
 limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
+
+
+def serialize_datetime_objects(obj: Any) -> Any:
+    """Recursively serialize datetime objects to ISO format strings"""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {key: serialize_datetime_objects(value) for key, value in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [serialize_datetime_objects(item) for item in obj]
+    else:
+        return obj
 
 
 @router.get("/innovations")
@@ -485,7 +498,10 @@ async def get_etl_performance_analytics(request: Request):
             "last_updated": datetime.now().isoformat(),
         }
 
-        return JSONResponse(content=analytics)
+        # Serialize any datetime objects in the analytics data
+        serialized_analytics = serialize_datetime_objects(analytics)
+
+        return JSONResponse(content=serialized_analytics)
 
     except Exception as e:
         logger.error(f"Error getting ETL performance analytics: {e}")
