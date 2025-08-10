@@ -6,7 +6,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import {
   useEnhancedDataCompleteness,
-  type RecordAnalysis
+  type RecordAnalysis,
+  type PatternAnalysis
 } from '@/hooks/useEnhancedDataCompleteness';
 import {
   AlertCircle,
@@ -223,10 +224,28 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
 
     const { pattern_analysis } = analysisData;
 
+    // Type guard to check if pattern_analysis has the expected structure
+    const isPatternAnalysisComplete = (pa: any): pa is PatternAnalysis => {
+      return pa && typeof pa === 'object' && 'systematic_issues' in pa;
+    };
+
+    if (!isPatternAnalysisComplete(pattern_analysis)) {
+      return (
+        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+          <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+          <AlertDescription className="text-amber-700 dark:text-amber-300">
+            Pattern analysis is still being processed or incomplete.
+            <br />
+            <span className="text-sm">Please wait a moment and try refreshing the data.</span>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
     return (
       <div className="space-y-6">
         {/* Systematic Issues */}
-        {pattern_analysis.systematic_issues.issues.length > 0 && (
+        {pattern_analysis.systematic_issues?.issues?.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

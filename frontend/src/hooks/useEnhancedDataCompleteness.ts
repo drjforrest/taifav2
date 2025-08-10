@@ -265,7 +265,14 @@ export const useEnhancedDataCompleteness = (
   }, [recordAnalysis]);
 
   const getSystematicIssues = useCallback((severity?: string): SystematicIssue[] => {
-    if (!recordAnalysis?.pattern_analysis?.systematic_issues?.issues) return [];
+    // Type guard to check if pattern_analysis has the expected structure
+    const isPatternAnalysisComplete = (pa: any): pa is PatternAnalysis => {
+      return pa && typeof pa === 'object' && 'systematic_issues' in pa;
+    };
+
+    if (!recordAnalysis?.pattern_analysis || !isPatternAnalysisComplete(recordAnalysis.pattern_analysis)) {
+      return [];
+    }
     
     const issues = recordAnalysis.pattern_analysis.systematic_issues.issues;
     
@@ -275,6 +282,7 @@ export const useEnhancedDataCompleteness = (
     
     return issues;
   }, [recordAnalysis]);
+
 
   // Auto-fetch on mount only
   useEffect(() => {
@@ -366,6 +374,21 @@ export const formatMissingDataInsight = (
   if (totalRecords === 0) return 'No records to analyze';
   
   const avgMissing = record_analysis.reduce((sum, r) => sum + r.missing_fields_count, 0) / totalRecords;
+  
+  // Type guard to check if pattern_analysis has the expected structure
+  const isPatternAnalysisComplete = (pa: any): pa is PatternAnalysis => {
+    return pa && typeof pa === 'object' && 'systematic_issues' in pa;
+  };
+  
+  // If pattern analysis is not available or incomplete, provide basic insight
+  if (!isPatternAnalysisComplete(pattern_analysis)) {
+    if (avgMissing > 5) {
+      return `Moderate data completeness: Average ${avgMissing.toFixed(1)} missing fields per record. Pattern analysis not available.`;
+    } else {
+      return `Basic data completeness: Average ${avgMissing.toFixed(1)} missing fields per record. Pattern analysis not available.`;
+    }
+  }
+  
   const criticalIssues = pattern_analysis.systematic_issues.critical_issues;
   const highIssues = pattern_analysis.systematic_issues.high_issues;
   
