@@ -553,22 +553,19 @@ class CitationExtractor:
                 citation_data = citation.to_dict()
                 citation_data["publication_id"] = source_publication_id
                 citation_data["innovation_id"] = source_innovation_id
+                
+                # Convert datetime to ISO string for Supabase
+                if "discovered_at" in citation_data and citation_data["discovered_at"]:
+                    citation_data["discovered_at"] = citation_data["discovered_at"].isoformat()
 
-                # Execute database insert (adjust SQL based on your schema)
-                query = """
-                INSERT INTO enrichment_citations 
-                (id, publication_id, innovation_id, title, url, confidence_score, 
-                 citation_text, discovered_at, processed, citation_type)
-                VALUES (%(id)s, %(publication_id)s, %(innovation_id)s, %(title)s, 
-                        %(url)s, %(confidence_score)s, %(citation_text)s, 
-                        %(discovered_at)s, %(processed)s, %(citation_type)s)
-                RETURNING id
-                """
-
-                await self.db.execute(query, citation_data)
-                stored_ids.append(citation.id)
-
-                logger.info(f"Stored citation: {citation.title[:50]}...")
+                # Use Supabase client instead of SQLAlchemy
+                response = self.db.table("enrichment_citations").insert(citation_data).execute()
+                
+                if response.data:
+                    stored_ids.append(citation.id)
+                    logger.info(f"Stored citation: {citation.title[:50]}...")
+                else:
+                    logger.warning(f"No data returned when storing citation {citation.id}")
 
             except Exception as e:
                 logger.error(f"Failed to store citation {citation.id}: {e}")
@@ -578,29 +575,37 @@ class CitationExtractor:
     async def get_unprocessed_citations(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Get citations that haven't been processed for snowball sampling"""
 
-        query = """
-        SELECT * FROM enrichment_citations 
-        WHERE processed = FALSE 
-        AND confidence_score >= 0.7
-        ORDER BY confidence_score DESC, discovered_at DESC
-        LIMIT %s
-        """
-
-        results = await self.db.fetch_all(query, (limit,))
-        return [dict(row) for row in results]
+        try:
+            # Use Supabase client to query unprocessed citations
+            response = (
+                self.db.table("enrichment_citations")
+                .select("*")
+                .eq("processed", False)
+                .gte("confidence_score", 0.7)
+                .order("confidence_score", desc=True)
+                .order("discovered_at", desc=True)
+                .limit(limit)
+                .execute()
+            )
+            
+            return response.data if response.data else []
+        except Exception as e:
+            logger.error(f"Failed to get unprocessed citations: {e}")
+            return []
 
     async def mark_citation_processed(self, citation_id: str) -> bool:
         """Mark a citation as processed"""
 
-        query = """
-        UPDATE enrichment_citations 
-        SET processed = TRUE, processed_at = NOW()
-        WHERE id = %s
-        """
-
         try:
-            await self.db.execute(query, (citation_id,))
-            return True
+            # Use Supabase client to update citation
+            response = (
+                self.db.table("enrichment_citations")
+                .update({"processed": True, "processed_at": datetime.now().isoformat()})
+                .eq("id", citation_id)
+                .execute()
+            )
+            
+            return bool(response.data)
         except Exception as e:
             logger.error(f"Failed to mark citation {citation_id} as processed: {e}")
             return False

@@ -61,7 +61,7 @@ export class MockDataService {
       recommendations: [
         '✅ Regular enrichment pipeline is running correctly',
         '🟡 Consider enhancing publication development stage detection',
-        '🔴 API currently unavailable - displaying demo data'
+        '🔍 Focus on improving AI techniques detection'
       ],
       analysis_timestamp: new Date().toISOString(),
       summary: {

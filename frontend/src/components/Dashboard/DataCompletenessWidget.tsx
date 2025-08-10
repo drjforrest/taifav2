@@ -90,7 +90,7 @@ const DataCompletenessWidget: React.FC = () => {
     gap => gap.severity === 'critical' || gap.severity === 'high'
   ) || [];
 
-  // Check if this is mock data
+  // Check if this is mock data (only show DEMO DATA badge for actual mock data)
   const isMockData = (missingDataMap as any)?._isMockData === true;
 
   return (
@@ -186,7 +186,7 @@ const DataCompletenessWidget: React.FC = () => {
                   <div key={tableName} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">{tableName}</span>
-                      <Badge variant="outline" className="text-xs text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600">
+                      <Badge variant="outline" className="text-xs text-gray-900 dark:text-gray-300 border-gray-300 dark:border-gray-600 font-medium">
                         {tableData.overall_completeness.toFixed(1)}% complete
                       </Badge>
                     </div>

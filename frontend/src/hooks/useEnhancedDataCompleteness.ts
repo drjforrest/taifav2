@@ -80,7 +80,7 @@ export interface RecordLevelResponse {
   table_name: string;
   total_records: number;
   record_analysis: RecordAnalysis[];
-  pattern_analysis: PatternAnalysis;
+  pattern_analysis: PatternAnalysis | {};
   analysis_timestamp: string;
   schema_info: {
     core_fields: string[];

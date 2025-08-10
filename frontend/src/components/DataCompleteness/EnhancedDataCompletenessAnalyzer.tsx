@@ -208,7 +208,18 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
   };
 
   const renderPatterns = () => {
-    if (!analysisData?.pattern_analysis) return null;
+    if (!analysisData?.pattern_analysis || Object.keys(analysisData.pattern_analysis).length === 0) {
+      return (
+        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+          <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+          <AlertDescription className="text-amber-700 dark:text-amber-300">
+            Pattern analysis data not available. This may be because pattern analysis was not requested or is still being processed.
+            <br />
+            <span className="text-sm">Try refreshing the data to include pattern analysis.</span>
+          </AlertDescription>
+        </Alert>
+      );
+    }
 
     const { pattern_analysis } = analysisData;
 
@@ -661,18 +672,32 @@ const EnhancedDataCompletenessAnalyzer: React.FC = () => {
             Detailed record-level analysis with pattern detection for missing data
           </p>
         </div>
-        <Button
-          onClick={() => refresh()}
-          disabled={loading}
-          variant="outline"
-        >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          ) : (
-            <RefreshCw className="w-4 h-4 mr-2" />
-          )}
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => refresh()}
+            disabled={loading}
+            variant="outline"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
+            Refresh All
+          </Button>
+          <Button
+            onClick={() => fetchRecordAnalysis(selectedTable, { includePatterns: true, limit: 50 })}
+            disabled={loading}
+            variant="outline"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <BarChart3 className="w-4 h-4 mr-2" />
+            )}
+            Fetch with Patterns
+          </Button>
+        </div>
       </div>
 
 
